@@ -6,9 +6,7 @@
 #          <mfhaigh@anacaz.com>
 #
 
-
 name=`basename "$0"`
-
 
 usage() {
     cat <<EOF
