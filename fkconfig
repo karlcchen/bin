@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search *.c and *.h files for text pattern2, always start from current path'
+    echo 
+    echo "Usage: fkconfig  pattern1 [pattern2]..."
+    echo         
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: \"$1\"", Path: `pwd`  
+    echo 
+    find . \( -name '*.kconfig' -o -name 'Kconfig*' \) -exec fgrep -H "$1" {} \;
+    shift 1
+done

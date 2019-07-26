@@ -1,0 +1,7 @@
+#!/bin/bash
+if [ ! -z "$2" ] ; 
+then 
+	find . \( -name "$1" -o -name "$2" \) 
+else
+	find . -name "$1" 
+fi

@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+#
+# set -xv
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' find recipes files in ./tmp/... receipe diretories '
+    echo 
+    echo "Usage: fnbb  name1 [name2]..."
+    echo         
+    echo Searching follwoing Recipes Directories:
+    echo RECIPES_DIR1=${RECIPES_DIR1}
+    echo RECIPES_DIR2=${RECIPES_DIR2}
+    echo RECIPES_DIR3=${RECIPES_DIR3}
+    echo RECIPES_DIR4=${RECIPES_DIR4}
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching file \"${1}*\"  in Path1: ${RECIPES_DIR1}"
+    echo 
+    find ${RECIPES_DIR1} -name "$1*" -ls 
+    echo 
+    echo " Searching file \"${1}*\"  in Path2: ${RECIPES_DIR2}"
+    echo 
+    find ${RECIPES_DIR2} -name "$1*" -ls 
+    echo 
+    echo " Searching file \"${1}*\"  in Path3: ${RECIPES_DIR3}"
+    echo 
+    find ${RECIPES_DIR3} -name "$1*" -ls 
+    echo 
+    echo " Searching file \"${1}*\"  in Path4: ${RECIPES_DIR4}"
+    echo 
+    find ${RECIPES_DIR4} -name "$1*" -ls 
+    shift 1
+done

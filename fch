@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search *.c and *.h files for text pattern2, always start from current path'
+    echo 
+    echo "Usage: fch  pattern1 [pattern2]..."
+    echo         
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: \"$1\"", Path: `pwd`  
+    echo 
+#    find . \( -name "*.c" -o -name "*.h" \) -exec fgrep -H "$1" {} \;
+#    find . \( -name "*.c" -o -name "*.h" \) -print0 | xargs -0 -I files fgrep -Hw ${GREP_OPT} "$1" files 
+    find . \( -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) -print0 | xargs -0 -I files fgrep -Hw ${GREP_OPT} "$1" files 
+    shift 1
+done

@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search sdk230 paths for text patterns'
+    echo ' searching all sdk230 paths'
+    echo 
+    echo "Usage: fch230  pattern1  [pattern2]"
+    echo         
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+#    echo 
+#    echo " Searching \"$1\" text patterns..., all sdk230 paths"
+#    echo 
+    pch  "${1}" $FCH230_LINUX_PATH $FCH230_U_BOOT_PATH $FCH230_SNWL_PATH 
+    shift 1
+done

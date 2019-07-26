@@ -1,0 +1,45 @@
+#!/bin/bash
+OBJ1=u-boot-octeon_$1.bin
+OBJ2=u-boot-octeon_$1.bin.???
+CONCURRENCY_LEVEL=8
+
+if [[ -z $1 ]]; then
+    echo -e "\n Usage: mk_u-boot board_name\n"
+    echo -e "\n Example: mk_u-boot mahogany\n"
+else
+    rm $OBJ1 $OBJ2
+    make clean
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make clean\n"
+    	exit 1
+    fi
+    make octeon_$1_config
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make octeon_$1_config\n"
+    	exit 2
+    fi
+    make -j${CONCURRENCY_LEVEL} 2>&1 | tee build-$1.log
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make -j13\n"
+    	exit 3
+    fi
+    if [ -f $OBJ1 ] ; then
+        cp $OBJ1 $OBJ2
+	if [[ ! -z $VL_COPY_KERNEL_DEST ]]; then
+		echo -e "\n copy u-boot to Dest1: ${VL_COPY_KERNEL_DEST}"
+		scp $OBJ2 ${VL_COPY_KERNEL_DEST}
+	fi
+	if [[ ! -z $VL_COPY_KERNEL_DEST2 ]]; then
+		echo -e "\n copy u-boot to Dest2: ${VL_COPY_KERNEL_DEST2}"
+		scp $OBJ2 ${VL_COPY_KERNEL_DEST2}
+	fi
+	if [[ ! -z $VL_COPY_KERNEL_DEST3 ]]; then
+		echo -e "\n copy u-boot to Dest3: ${VL_COPY_KERNEL_DEST3}"
+		scp $OBJ2 ${VL_COPY_KERNEL_DEST3}
+	fi
+	if [[ ! -z $VL_COPY_KERNEL_DEST4 ]]; then
+		echo -e "\n copy u-boot to Dest4: ${VL_COPY_KERNEL_DEST4}"
+		scp $OBJ2 ${VL_COPY_KERNEL_DEST4}
+	fi
+    fi
+fi

@@ -1,0 +1,4 @@
+#!/bin/bash
+# remove comments and blanks
+#
+sed -e 's/\s*#.*$//' | sed -e '/^\s*$/d'

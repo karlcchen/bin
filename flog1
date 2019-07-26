@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search *.log files for multiple text patterns, always start from current path'
+    echo 
+    echo "Usage: flog  pattern1 [pattern2]..."
+    echo         
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: \"$1\"", Path: `pwd`  
+    echo 
+#    find . \( -name "*.log" \) -exec fgrep ${GREP_OPT} "$1" {} \;
+    find . -maxdepth 1 \( -name "*.log" \) -print0 | xargs -0 -I files fgrep -H ${GREP_OPT} "$1" files 
+    shift 1
+done

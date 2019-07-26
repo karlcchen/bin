@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ "$#" -lt 2 ] ; then
+	echo -e "\n === find same file from a list of files ===\n"
+	echo -e " Usage: fsame src_file file_list\n"
+	echo -e "Example:\n"
+	echo -e "\t fsame .config *.config\n"
+	exit 1 
+fi 
+
+src_file="$1"
+shift 1
+while [ ! -z "$1" ] ; 
+do 
+#	echo -e "diff ${src_file} ${1}\n"
+	diff ${src_file} ${1} >/dev/null
+
+	if [ $? -eq 0 ] ; then 
+		echo -e "${1}\n"
+	fi 
+        shift 1
+done
+

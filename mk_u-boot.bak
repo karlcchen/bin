@@ -1,0 +1,28 @@
+#!/bin/bash
+OBJ1=u-boot-octeon_$1.bin
+OBJ2=u-boot-octeon_$1.bin.kch
+if [[ -z $1 ]]; then
+    echo
+    echo Usage: mk_u-boot board_name
+    echo
+else
+    rm $OBJ1 $OBJ2
+    make clean
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make clean\n" 
+    fi
+    make octeon_$1_config
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make octeon_$1_config\n" 
+    fi
+    make -j13
+    if [ ! $? -eq 0 ] ; then
+    	echo -e "\n #ERROR: make -j13\n" 
+    fi
+    if [ -f $OBJ1 ] ; then
+        cp $OBJ1 $OBJ2
+        scp $OBJ2 10.0.19.73:/tftpboot/kchen
+    else
+	echo -e "#ERROR: make u-boot $1 complete, cannot find: \"$OBJ1\"\n"
+    fi
+fi

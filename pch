@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+if [ -z "$1" -a -z "$2" ] ; then 
+	echo
+	echo ' search *.c and *.h files for pattern, path'
+	echo 
+	echo "Usage: pch pattern path1 [path2] [path3]"
+	echo         
+	exit 1
+fi
+SCH_TEXT="$1"
+while [ ! -z "$2" ] ; 
+do
+# 	echo 
+# 	echo " Searching \"$SCH_TEXT\" pattern, starting path: \"$2\""
+# 	echo 
+#
+# CD to path, it makes file_path displayed by fgrep much shorter
+#
+        cd "$2"
+        if [ "$?" -eq "0" ] ; then  
+#	    find . \( -name "*.c" -o -name "*.h" \) -exec fgrep -H "${SCH_TEXT}" {} \;
+            fch "$SCH_TEXT"
+        else
+            echo
+            echo "### ERROR: cannot change path to: \"$2\""
+            echo
+        fi
+	shift 1
+done 

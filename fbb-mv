@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search *.bb and files for text patterns, searching recipes directory from ./tmp'
+    echo 
+    echo "Usage: fbb-mv  pattern1 [pattern2]..."
+    echo         
+    echo Searching follwoing Recipes Directories:
+    echo RECIPES_DIR1=${RECIPES_DIR1}
+    echo RECIPES_DIR2=${RECIPES_DIR2}
+    echo RECIPES_DIR3=${RECIPES_DIR3}
+    echo RECIPES_DIR4=${RECIPES_DIR4}
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: \"$1\"", Path: ${RECIPES_DIR1}
+    echo 
+    find ${RECIPES_DIR1} -name '*.bb' -exec fgrep -iH "$1" {} \;
+    echo 
+    echo " Searching: \"$1\"", Path: ${RECIPES_DIR2}
+    echo 
+    find ${RECIPES_DIR2} -name '*.bb' -exec fgrep -iH "$1" {} \;
+    echo 
+    echo " Searching: \"$1\"", Path: ${RECIPES_DIR3}
+    echo 
+    find ${RECIPES_DIR3} -name '*.bb' -exec fgrep -iH "$1" {} \;
+    echo 
+    echo " Searching: \"$1\"", Path: ${RECIPES_DIR4}
+    echo 
+    find ${RECIPES_DIR4} -name '*.bb' -exec fgrep -iH "$1" {} \;
+    shift 1
+done

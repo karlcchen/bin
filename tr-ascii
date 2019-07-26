@@ -1,0 +1,11 @@
+#!/bin/bash
+# 
+# http://alvinalexander.com/blog/post/linux-unix/how-remove-non-printable-ascii-characters-file-unix
+# tr -cd '\11\12\15\40-\176' < file-with-binary-chars > clean-file
+# octal 11: tab
+# octal 12: linefeed
+# octal 15: carriage return
+# octal 40 through octal 176: all the "good" keyboard characters 
+#
+
+tr -cd '\11\12\15\40-\176' 

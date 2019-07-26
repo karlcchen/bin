@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# sed -i 's/[\d128-\d255]//g' FILENAME
+
+LANG=C sed 's/[\d128-\d255]//g'
+

@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+if [ -z "$1" ] ; then 
+    echo
+    echo ' search specific files for text pattern, start from current path and all its sub-directories'
+    echo 
+    echo "Usage: findgrep files pattern1 [pattern2...]"
+    echo         
+    exit 1
+fi
+FILE_SPEC="$1"
+shift 1
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: \"$1\"", Files: ${FILE_SPEC}, Path: `pwd`  
+    echo 
+    find . -name "${FILE_SPEC}" -exec fgrep -H "$1" {} \;
+    shift 1
+done

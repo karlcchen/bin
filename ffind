@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+if [ -z "$1" -o -z "$2" ] ; then 
+    echo
+    echo ' search files for text pattern2, always start from current path'
+    echo 
+    echo "Usage: ffind  files_sepc1  pattern1 [file_sepc2 pattern2 ]..."
+    echo         
+    exit 1
+fi
+while [ ! -z "$1" ] ;
+do
+    echo 
+    echo " Searching: file:\"$1\", pattern:\"$2\" , Path:`pwd`"  
+    echo 
+#    find . \( -name "$1" \) -exec fgrep -H "$2" {} \;
+    find . \( -name "$1" \) | xargs fgrep -H "$2" 
+    shift 2
+done
