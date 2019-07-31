@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# git-clone-karlcchen
+#
+if [ "$1" = "" ] ; then 
+	echo "ERROR: need input repository!" 
+	exit 1
+fi 
+CLONE_REPO="git@github.com:/karlcchen/${1}"
+git clone ${CLONE_REPO}
