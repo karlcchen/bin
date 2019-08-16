@@ -3,6 +3,11 @@
 #
 # set -xv
 #
+
+if [ -z "${FIND_OPT}" ] ; then 
+    FIND_OPT="type -f"
+fi
+
 if [ -z "$1" ] ; then 
     echo
     echo ' find recipes files in ./tmp/... receipe diretories '
@@ -21,18 +26,18 @@ do
     echo 
     echo " Searching file \"${1}*\"  in Path1: ${RECIPES_DIR1}"
     echo 
-    find ${RECIPES_DIR1} -name "$1*" -ls 
+    find ${RECIPES_DIR1} ${FIND_OPT} -name "$1*" -ls 
     echo 
     echo " Searching file \"${1}*\"  in Path2: ${RECIPES_DIR2}"
     echo 
-    find ${RECIPES_DIR2} -name "$1*" -ls 
+    find ${RECIPES_DIR2} ${FIND_OPT} -name "$1*" -ls 
     echo 
     echo " Searching file \"${1}*\"  in Path3: ${RECIPES_DIR3}"
     echo 
-    find ${RECIPES_DIR3} -name "$1*" -ls 
+    find ${RECIPES_DIR3} ${FIND_OPT} -name "$1*" -ls 
     echo 
     echo " Searching file \"${1}*\"  in Path4: ${RECIPES_DIR4}"
     echo 
-    find ${RECIPES_DIR4} -name "$1*" -ls 
+    find ${RECIPES_DIR4} ${FIND_OPT} -name "$1*" -ls 
     shift 1
 done

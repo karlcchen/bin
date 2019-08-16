@@ -14,6 +14,6 @@ do
     echo " Searching: \"$1\"", Path: `pwd`  
     echo 
 #    find . \( -name "*.log" \) -exec fgrep ${GREP_OPT} "$1" {} \;
-    find . -maxdepth 1 \( -name "*.log" \) -print0 | xargs -0 -I files fgrep -H ${GREP_OPT} "$1" files 
+    find . -type f -maxdepth 1 \( -name "*.log" \) -print0 | xargs -0 -I files fgrep -H ${GREP_OPT} "$1" files 
     shift 1
 done

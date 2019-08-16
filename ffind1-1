@@ -14,6 +14,6 @@ do
     echo " Searching: file:\"$1\", pattern:\"$2\" , Path:`pwd`"  
     echo 
 #    find . \( -name "$1" \) -exec fgrep -H "$2" {} \;
-    find . -maxdepth 1 \( -name "$1" \) | xargs fgrep -H -m 1 "$2" 
+    find . -type f -maxdepth 1 \( -name "$1" \) | xargs fgrep -H -m 1 "$2" 
     shift 2
 done

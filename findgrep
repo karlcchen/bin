@@ -15,6 +15,6 @@ do
     echo 
     echo " Searching: \"$1\"", Files: ${FILE_SPEC}, Path: `pwd`  
     echo 
-    find . -name "${FILE_SPEC}" -exec fgrep -H "$1" {} \;
+    find . -type f -name "${FILE_SPEC}" -exec fgrep -H "$1" {} \;
     shift 1
 done

@@ -1,2 +1,19 @@
 #!/bin/bash
-ls -ltr $1 | tail
+#
+PARAMETER_DIR="saved_parameters"
+THIS_CMD="lstail"
+THIS_FILENAME="${PARAMETER_DIR}/${THIS_CMD}"
+VERBOSE=1
+if [ -z "${1}" ] ; then
+    ARG1=`cat ~/${THIS_FILENAME}-01.arg`
+    if [ "${VERBOSE}" -ne 0 ] ; then 
+        echo -e "\t ${THIS_CMD} ${ARG1}\n"
+    fi
+else
+    ARG1="${1}"
+fi 
+
+ls -ltr ${ARG1} | tail 
+if [ $? -eq 0 ] ; then 
+    echo "${ARG1}" >~/${THIS_FILENAME}-01.arg
+fi

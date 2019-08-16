@@ -13,6 +13,6 @@ do
     echo 
     echo " Searching: \"$1\"", Path: `pwd`  
     echo 
-    find . \( -name "*.sh" \) -exec fgrep -H "$1" {} \;
+    find . -type f \( -name "*.sh" \) -exec fgrep -H "$1" {} \;
     shift 1
 done
