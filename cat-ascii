@@ -1,0 +1,7 @@
+#!/bin/bash
+if [ ! -z "$1" ] ; then 
+	cat $1 | tr-ascii
+else
+	printf "\nERROR: no input filename!\n"
+	exit 1
+fi	
