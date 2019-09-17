@@ -7,7 +7,6 @@ if [ "$1" = "" ] ; then
     return 1
 fi 
 
-
 if [ "$2" = "" ] ; then 
     printf "no input found for destination directory\n"
     return 2
@@ -18,10 +17,10 @@ DEST_DIR="$2"
 
 #
 # separate string by ${SONIC_CORE_X_DIR} 
-SONIC_BASE="`pwd | awk -F \'${SONIC_CORE_X_DIR}\' '{print $1}'`"
+SONIC_BASE="`pwd | awk -F \"${SONIC_CORE_X_DIR}\" '{print $1}'`"
 
 # for debug 
-# printf "\n INFO: found SONIC_BASE=%s\n" ${SONIC_BASE}
+# printf "\nDEBUG INFO: found SONIC_BASE=%s\n" ${SONIC_BASE}
 # 
 
 cd ${SONIC_BASE}
@@ -37,6 +36,10 @@ if [ -d ${SONIC_CORE_X_DIR} ] ; then
         return 4 
     fi 
 else
+    echo 
+    pwd
+    echo
+    printf "\nDEBUG INFO: found SONIC_BASE=%s\n" ${SONIC_BASE}
     printf "\nERROR: cannot find base directory: %s\n" ${SONIC_CORE_X_DIR}
     return 5
 fi
