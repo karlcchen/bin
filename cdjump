@@ -1,6 +1,6 @@
 # file to be sourced 
 #
-# cdir.sh 
+# cdjump 
 #
 if [ "$1" = "" ] ; then 
     printf "no input found for base directory\n"
