@@ -16,31 +16,35 @@ SONIC_CORE_X_DIR="$1"
 DEST_DIR="$2"
 
 #
-# separate string by ${SONIC_CORE_X_DIR} 
+# separate string to two parts by using "${SONIC_CORE_X_DIR}" as field separator 
 SONIC_BASE="`pwd | awk -F \"${SONIC_CORE_X_DIR}\" '{print $1}'`"
+if [ $? -ne 0 ] ; then
+    printf "ERROR: pasering current path: %s\n" "`pwd`"
+    return 3
+fi 
 
-# for debug 
-# printf "\nDEBUG INFO: found SONIC_BASE=%s\n" ${SONIC_BASE}
+# for debug only
+# printf "\nDEBUG INFO: found SONIC_BASE=%s\n" "${SONIC_BASE}"
 # 
 
 cd ${SONIC_BASE}
 if [ $? -ne 0 ] ; then
-    printf "\nERROR: cd to directory %s failed!\n" ${SONIC_BASE} 
-    return 3 
+    printf "\nERROR: cd to directory %s failed!\n" "${SONIC_BASE}" 
+    return 4 
 fi 
 #
 if [ -d ${SONIC_CORE_X_DIR} ] ; then 
     cd ${DEST_DIR}
     if [ $? -ne 0 ] ; then
-        printf "\nERROR: cd to directory %s failed!\n" ${DEST_DIR} 
-        return 4 
+        printf "\nERROR: cd to directory %s failed!\n" "${DEST_DIR}" 
+        return 5 
     fi 
 else
     echo 
     pwd
     echo
-    printf "\nDEBUG INFO: found SONIC_BASE=%s\n" ${SONIC_BASE}
-    printf "\nERROR: cannot find base directory: %s\n" ${SONIC_CORE_X_DIR}
-    return 5
+    printf "\nDEBUG INFO: found SONIC_BASE=%s\n" "${SONIC_BASE}"
+    printf "\nERROR: cannot find base directory: %s\n" "${SONIC_CORE_X_DIR}"
+    return 6
 fi
 
