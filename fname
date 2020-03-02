@@ -1,9 +1,9 @@
 #!/bin/bash
 if [ ! -z "$2" ] ; 
 then 
-	find . -type f  \( -name "$1" -o -name "$2" \) 
+	find -L . -type f \( -name "$1" -o -name "$2" \) 
 #	find . \( -name "$1" -o -name "$2" \) 
 else
-	find . -type f -name "$1" 
+	find -L . -type f -name "$1" 
 #	find . -name "$1" 
 fi
