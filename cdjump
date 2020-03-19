@@ -3,48 +3,68 @@
 # cdjump 
 #
 if [ "$1" = "" ] ; then 
-    printf "no input found for base directory\n"
+    printf "\nERROR: no input found for 1st argument: base directory\n"
     return 1
 fi 
 
-if [ "$2" = "" ] ; then 
-    printf "no input found for destination directory\n"
-    return 2
-fi 
+# 2nd argument can be null
+#if [ "$2" = "" ] ; then 
+#    printf "\nWARNING: no input found for 2nd argument: destination directory\n"
+#fi 
 
 SONIC_CORE_X_DIR="$1"
 DEST_DIR="$2"
 
-#
-# separate string to two parts by using "${SONIC_CORE_X_DIR}" as field separator 
-SONIC_BASE="`pwd | awk -F \"${SONIC_CORE_X_DIR}\" '{print $1}'`"
-if [ $? -ne 0 ] ; then
-    printf "ERROR: pasering current path: %s\n" "`pwd`"
-    return 3
+##echo "DEBUG: #1 SONIC_CORE_X_DIR=${SONIC_CORE_X_DIR}"
+##echo "DEBUG: #2 DEST_DIR=${DEST_DIR}"
+
+if [ ! -d "${SONIC_CORE_X_DIR}" ] ; then 
+    #
+    # separate string to two parts by using "${SONIC_CORE_X_DIR}" as field separator 
+    PRJ_BASE="`pwd | awk -F \"${SONIC_CORE_X_DIR}\" '{print $1}'`"
+    if [ $? -ne 0 ] ; then
+        printf "\nERROR: pasering current path: \"%s\"\n" "`pwd`"
+        return 5
+    fi 
+
+    # for debug only
+    # printf "\nDEBUG INFO: found PROJECT_BASE=%s\n" "${PRJ_BASE}"
+    # 
+
+    cd ${PRJ_BASE}
+    if [ $? -ne 0 ] ; then
+        printf "\nERROR: cd to directory \"%s\" failed!\n" "${PRJ_BASE}" 
+        return 6 
+    fi 
 fi 
 
-# for debug only
-# printf "\nDEBUG INFO: found SONIC_BASE=%s\n" "${SONIC_BASE}"
-# 
-
-cd ${SONIC_BASE}
-if [ $? -ne 0 ] ; then
-    printf "\nERROR: cd to directory %s failed!\n" "${SONIC_BASE}" 
-    return 4 
+if [ "${DEST_DIR}" = "" ] ; then 
+    return 0 
 fi 
+
 #
-if [ -d ${SONIC_CORE_X_DIR} ] ; then 
+if [ -d "${DEST_DIR}" ] ; then 
+#
+# if DEST_DIR has multiple paths, like "SonicCoreX/projects" 
+#
+##    echo "DEBUG: flow #2"
+##    echo "DEBUG: DEST_DIR=${DEST_DIR}"
     cd ${DEST_DIR}
     if [ $? -ne 0 ] ; then
-        printf "\nERROR: cd to directory %s failed!\n" "${DEST_DIR}" 
-        return 5 
+        printf "\nERROR: cd to directory \"%s\" failed!\n" "${DEST_DIR}" 
+        return 7 
     fi 
+    return 0 
 else
-    echo 
-    pwd
-    echo
-    printf "\nDEBUG INFO: found SONIC_BASE=%s\n" "${SONIC_BASE}"
-    printf "\nERROR: cannot find base directory: %s\n" "${SONIC_CORE_X_DIR}"
-    return 6
+#
+# Note: we come here because "${SONIC_CORE_X_DIR}" could equal 
+# 
+##    echo "DEBUG: flow #3"
+
+#
+    printf "\nINFO: PWD=%s\n", "$(pwd)"
+    printf "DEBUG INFO: found PROJECT_BASE=%s, SonicCoreX=%s\n" "${PRJ_BASE}" ${SONIC_CORE_X_DIR}
+    printf "ERROR: cannot find dest directory: \"%s\"\n" "${DEST_DIR}"
+    return 10
 fi
 
