@@ -1,9 +1,16 @@
 #!/bin/bash
+#
 if [ ! -z "$2" ] ; 
 then 
-	find -L . -type f \( -name "$1" -o -name "$2" \) 
+    FOUND_LIST=`find -L . -type f \( -name "$1" -o -name "$2" \)`
 #	find . \( -name "$1" -o -name "$2" \) 
 else
-	find -L . -type f -name "$1" 
+    FOUND_LIST=`find -L . -type f -name "$1"` 
 #	find . -name "$1" 
+fi
+#
+if [ $? -eq 0 ] ; then 
+    if [ "${FOUND_LIST}" != "" ] ; then 
+        echo "${FOUND_LIST}" | xargs realpath
+    fi 
 fi
