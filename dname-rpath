@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# dname-rpath
+#
+
+if [ ! -z "$2" ] ; 
+then 
+    find . -depth -type d  \( -name "$1" -o -name "$2" \)
+#	find . \( -name "$1" -o -name "$2" \) 
+else
+    find . -depth -type d -name "$1"
+#	find . -name "$1" 
+fi
+
