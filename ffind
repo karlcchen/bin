@@ -10,10 +10,10 @@ if [ -z "$1" -o -z "$2" ] ; then
 fi
 while [ ! -z "$1" ] ;
 do
-    echo 
-    echo " Searching: file:\"$1\", pattern:\"$2\" , Path:`pwd`"  
-    echo 
+#    echo 
+#    echo " Searching: file:\"$1\", pattern:\"$2\" , Path:`pwd`"  
+#    echo 
 #    find . \( -name "$1" \) -exec fgrep -H "$2" {} \;
-    find . -type f \( -name "$1" \) -print0 | xargs -0 fgrep ${GREP_OPT} -H "$2" 
+    find . -type f \( -name "$1" \) ${FIND_OPT} -print0 | xargs -0 fgrep ${GREP_OPT} "$2"
     shift 2
 done

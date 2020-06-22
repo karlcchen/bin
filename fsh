@@ -10,9 +10,9 @@ if [ -z "$1" ] ; then
 fi
 while [ ! -z "$1" ] ;
 do
-    echo 
-    echo " Searching: \"$1\"", Path: `pwd`  
-    echo 
-    find . -type f \( -name "*.sh" \) -exec fgrep -H "$1" {} \;
+#    echo 
+#    echo " Searching: \"$1\"", Path: `pwd`  
+#    echo 
+    find . -type f \( -name "*.sh" \) ${FIND_OPT} -print0 | xargs -0 fgrep ${GREP_OPT} "$1"
     shift 1
 done
