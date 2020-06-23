@@ -20,9 +20,10 @@ fi
 
 if [ -z "$1" ] ; then 
     printf ' find \"file_sepc\" for \"text_pattern\", Search path from current location'
-    printf "\n Usage: %s\t file_spec  pattern\n\n" "$0"
-    printf "\n Example1:\n\t %s\t \"%s\" \"%s\" \n\n" "$0" "*.c *.h" "Hello"
-    printf "\n Example2: only list files\n\t %s\t \"%s\" \n\n" "$0" "*.c *.h" 
+    printf "\n Usage: %s\t file_spec pattern\n\n" "$0"
+    printf "\n Example1:\n\t %s\t \'%s\' \"%s\" \n\n" "$0" "*.c *.h" "Hello"
+    printf "\n Example2: only list files\n\t %s\t \'%s\' \n\n" "$0" "*.c *.h" 
+    printf "\n Example3: search multiple patterns\n\t %s\t \'%s\' \"%s\"\n\n" "$0" "*.c *.h" "Hello|World"
     exit 1
 fi
 
@@ -58,10 +59,14 @@ else
 #
 # Note: use -print0 (null chacatcer), grep found less than when not using -print0
 #    		find ${FIND_PATH} -type ${FIND_TYPE} "${name_patterns[@]}" ${FIND_OPT} -print0 | xargs -0 fgrep ${GREP_OPT} "${GREP_TEXT}"
+#
+# note: it is possible tell grep to search multiple patterns, use -e "p1" -e "p2", etc..., but result could be a little bit different
+#
     		find ${FIND_PATH} -type ${FIND_TYPE} "${name_patterns[@]}" ${FIND_OPT} | xargs fgrep ${GREP_OPT} "${GREP_TEXT}"
     	fi 
     	LOOP=$((LOOP+1))
     done 
+
 fi 
 
 

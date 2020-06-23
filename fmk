@@ -10,9 +10,9 @@ if [ -z "$1" ] ; then
 fi
 while [ ! -z "$1" ] ;
 do
-    echo 
-    echo " Searching: \"$1\"", Path: `pwd`  
-    echo 
+#    echo 
+#    echo " Searching: \"$1\"", Path: `pwd`  
+#    echo 
 #    find . \( -name "make*" -o -name "Make*" -o -name "*.mk" -o -name "*.mak" \) -exec fgrep -H "$1" {} \;
 #    find . -type f \( -name "make*" -o -name "Make*" -o -name "*.mk" -o -name "*.mak" \) | xargs fgrep -H "$1" 
     find . -type f \( -name 'make*' -o -name 'Make*' -o -name '*.mk' -o -name '*.mak' -o -name "GNUmake*" \) | xargs fgrep -H "$1" 

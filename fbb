@@ -10,6 +10,8 @@ if [ -z "$1" ] ; then
 fi
 while [ ! -z "$1" ] ;
 do
+# '*.bb *.bbappend *.inc *.bbclass *.conf'
+
 #    echo 
 #    echo " Searching: \"$1\"", Path: `pwd`  
 #    echo 
