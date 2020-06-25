@@ -1,0 +1,89 @@
+#
+# file asc
+#
+
+EXE_NAME="`realpath $0`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+
+source ${EXE_DIR}/ascii-esc.sh 
+
+while [ ! -z "$1" ] ;
+do 
+    if [ "$1" = "red" ] ; then 
+        printf "${AESC_COLOR_RED}"
+    elif [ "$1" = "RED" ] ; then 
+        printf "${AESC_COLOR_L_RED}"
+#
+    elif [ "$1" = "blue" ] ; then 
+        printf "${AESC_COLOR_BLUE}"
+    elif [ "$1" = "BLUE" ] ; then 
+        printf "${AESC_COLOR_L_BLUE}"
+#
+    elif [ "$1" = "green" ] ; then 
+        printf "${AESC_COLOR_GREEN}"
+    elif [ "$1" = "GREEN" ] ; then 
+        printf "${AESC_COLOR_L_GREEN}"
+#
+    elif [ "$1" = "cyan" ] ; then 
+        printf "${AESC_COLOR_CYAN}"
+    elif [ "$1" = "CYAN" ] ; then 
+        printf "${AESC_COLOR_L_CYAN}"
+#
+    elif [ "$1" = "yellow" ] ; then 
+        printf "${AESC_COLOR_YELLOW}"
+    elif [ "$1" = "YELLOW" ] ; then 
+        printf "${AESC_COLOR_L_YELLOW}"
+#
+    elif [ "$1" = "magenta" ] ; then 
+        printf "${AESC_COLOR_MAGENTA}"
+    elif [ "$1" = "MAGENTA" ] ; then 
+        printf "${AESC_COLOR_L_MAGENTA}"
+#
+    elif [ "$1" = "default" ] ; then 
+        printf "${AESC_COLOR_RST_FG}"
+#
+    elif [ "$1" = "blink" ] ; then 
+        printf "${AESC_SET_BLINK}"
+    elif [ "$1" = "unblink" ] ; then 
+        printf "${AESC_RST_BLINK}"
+#
+    elif [ "$1" == "reset" ] ; then 
+        printf "${AESC_RST_ALL}"
+#
+    elif [ "$1" == "test" ] ; then 
+        printf "${AESC_RST_ALL}"
+#        printf "${AESC_SET_BOLD} BOLD ${AESC_RST_BOLD} Normal"
+        printf "${AESC_SET_DIM} DIM ${AESC_RST_DIM} Normal"
+        printf "${AESC_SET_BLINK} BLINK ${AESC_RST_BLINK} Normal"
+        printf "${AESC_SET_UNDERLINED} UNDERLINED ${AESC_RST_UNDERLINED} Normal"
+        printf "${AESC_SET_REVERSE} REVSRSE ${AESC_RST_REVERSE} Normal"
+
+        printf "${AESC_COLOR_RED} RED ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_RED} LIGHT RED ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_COLOR_GREEN} GREEN ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_GREEN} LIGHT GREEN ${AESC_COLOR_DEFAULT} Normal"
+
+
+        printf "${AESC_COLOR_YELLOW} YELLOW ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_YELLOW} LIGHT YELLOW ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_COLOR_BLUE} BLUE ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_BLUE} LIGHT BLUE ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_COLOR_MAGENTA} MAGENTA ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_MAGENTA} LIGHT MAGENTA ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_COLOR_CYAN} CYAN ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_CYAN} LIGHT CYAN ${AESC_COLOR_DEFAULT} Normal"
+#
+        printf "${AESC_COLOR_D_GREY} DARK  GREY ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_L_GREY} LIGHT GREY ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_COLOR_WHITE} WHITE ${AESC_COLOR_DEFAULT} Normal"
+
+        printf "${AESC_RST_ALL}"
+    fi 
+        shift 1
+done 
+
