@@ -7,6 +7,19 @@ EXE_DIR="`dirname ${EXE_NAME}`"
 
 source ${EXE_DIR}/ascii-esc.sh 
 
+b_DEBUG=0
+b_VERBOSE=0
+if [ "$1" == "--verbose" ] ; then 
+	b_VERBOSE=1
+	shift 1
+fi 
+if [ "$1" == "--debug" ] ; then 
+	b_DEBUG=1
+	b_VERBOSE=1
+	shift 1
+fi 
+
+CNT=1 
 while [ ! -z "$1" ] ;
 do 
     if [ "$1" = "red" ] ; then 
@@ -42,6 +55,25 @@ do
     elif [ "$1" = "default" ] ; then 
         printf "${AESC_COLOR_RST_FG}"
 #
+    elif [ "$1" = "norm" ] ; then 
+        printf "${AESC_SET_NORM}"
+#
+    elif [ "$1" = "bold" ] ; then 
+        printf "${AESC_COLOR_SET_BLOD}"
+#
+    elif [ "$1" = "dim" ] ; then 
+        printf "${AESC_SET_DIM}"
+#
+    elif [ "$1" = "reverse" ] ; then 
+        printf "${AESC_SET_REVERSE}"
+    elif [ "$1" = "unreverse" ] ; then 
+        printf "${AESC_RST_REVERSE}"
+#
+    elif [ "$1" = "uline" ] ; then 
+        printf "${AESC_SET_UNDERLINED}"
+    elif [ "$1" = "unuline" ] ; then 
+        printf "${AESC_RST_UNDERLINED}"
+#
     elif [ "$1" = "blink" ] ; then 
         printf "${AESC_SET_BLINK}"
     elif [ "$1" = "unblink" ] ; then 
@@ -51,39 +83,49 @@ do
         printf "${AESC_RST_ALL}"
 #
     elif [ "$1" == "test" ] ; then 
-        printf "${AESC_RST_ALL}"
-#        printf "${AESC_SET_BOLD} BOLD ${AESC_RST_BOLD} Normal"
-        printf "${AESC_SET_DIM} DIM ${AESC_RST_DIM} Normal"
-        printf "${AESC_SET_BLINK} BLINK ${AESC_RST_BLINK} Normal"
-        printf "${AESC_SET_UNDERLINED} UNDERLINED ${AESC_RST_UNDERLINED} Normal"
-        printf "${AESC_SET_REVERSE} REVSRSE ${AESC_RST_REVERSE} Normal"
+	echo 
+        printf "${AESC_RST_ALL} Reset All\n"
+        printf "${AESC_SET_BOLD} BOLD ${AESC_SET_NORM} Normal\n"
+        printf "${AESC_SET_D_UNDERLINED} DOUBLE UNDERLINED ${AESC_RST_ALL} Reset All\n"
 
-        printf "${AESC_COLOR_RED} RED ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_RED} LIGHT RED ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_SET_UNDERLINED} UNDERLINED ${AESC_RST_UNDERLINED} UnUNDERLINED\n"
+        printf "${AESC_SET_DIM} DIM ${AESC_SET_NORM} Normal\n"
+        printf "${AESC_SET_BLINK} BLINK ${AESC_RST_BLINK} UnBLINK\n"
+        printf "${AESC_SET_REVERSE} REVSRSE ${AESC_RST_REVERSE} unREVERSE\n"
 
-        printf "${AESC_COLOR_GREEN} GREEN ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_GREEN} LIGHT GREEN ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_RED} RED ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_RED} LIGHT RED ${AESC_COLOR_DEFAULT} Default\n"
+
+        printf "${AESC_COLOR_GREEN} GREEN ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_GREEN} LIGHT GREEN ${AESC_COLOR_DEFAULT} Default\n"
 
 
-        printf "${AESC_COLOR_YELLOW} YELLOW ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_YELLOW} LIGHT YELLOW ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_YELLOW} YELLOW ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_YELLOW} LIGHT YELLOW ${AESC_COLOR_DEFAULT} Default\n"
 
-        printf "${AESC_COLOR_BLUE} BLUE ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_BLUE} LIGHT BLUE ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_BLUE} BLUE ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_BLUE} LIGHT BLUE ${AESC_COLOR_DEFAULT} Default\n"
 
-        printf "${AESC_COLOR_MAGENTA} MAGENTA ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_MAGENTA} LIGHT MAGENTA ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_MAGENTA} MAGENTA ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_MAGENTA} LIGHT MAGENTA ${AESC_COLOR_DEFAULT} Default\n"
 
-        printf "${AESC_COLOR_CYAN} CYAN ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_CYAN} LIGHT CYAN ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_CYAN} CYAN ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_CYAN} LIGHT CYAN ${AESC_COLOR_DEFAULT} Default\n"
 #
-        printf "${AESC_COLOR_D_GREY} DARK  GREY ${AESC_COLOR_DEFAULT} Normal"
-        printf "${AESC_COLOR_L_GREY} LIGHT GREY ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_D_GREY} DARK  GREY ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_GREY} LIGHT GREY ${AESC_COLOR_DEFAULT} Default\n"
 
-        printf "${AESC_COLOR_WHITE} WHITE ${AESC_COLOR_DEFAULT} Normal"
+        printf "${AESC_COLOR_WHITE} WHITE ${AESC_COLOR_DEFAULT} Default\n"
 
-        printf "${AESC_RST_ALL}"
+        printf "${AESC_RST_ALL} Reset All\n"
+	echo
+    else
+	if [ ${b_VERBOSE} -ne 0 ] ; then  
+		printf "\nERROR1: %s unknown command #%d: \"%s\"\n" "${EXE_NAME}" ${CNT} "$1"
+	fi
     fi 
-        shift 1
+#
+    CNT=$((CNT+1))
+    shift 1
 done 
 
