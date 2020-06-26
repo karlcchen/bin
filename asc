@@ -4,8 +4,14 @@
 
 EXE_NAME="`realpath $0`"
 EXE_DIR="`dirname ${EXE_NAME}`"
+ASCII_ESC_SRC="${EXE_DIR}/ascii-esc.sh"
 
-source ${EXE_DIR}/ascii-esc.sh 
+if [ -f "${ASCII_ESC_SRC}" ] ; then  
+	source ${ASCII_ESC_SRC} 
+else 
+	printf "\nERROR1: %s cannot find %s\n" "${EXE_NAME}" "${ASCII_ESC_SRC}"
+	exit 1
+fi
 
 b_DEBUG=0
 b_VERBOSE=0
