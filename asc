@@ -15,11 +15,11 @@ fi
 
 b_DEBUG=0
 b_VERBOSE=0
-if [ "$1" == "--verbose" ] ; then 
+if [ "$1" = "--verbose" ] ; then 
 	b_VERBOSE=1
 	shift 1
 fi 
-if [ "$1" == "--debug" ] ; then 
+if [ "$1" = "--debug" ] ; then 
 	b_DEBUG=1
 	b_VERBOSE=1
 	shift 1
