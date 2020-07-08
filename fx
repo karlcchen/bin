@@ -15,6 +15,85 @@ FIND_TYPE="f"
 WC_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
 WC_MK='make* Make* *.mk *.mak GNUmake*' 
 
+function this_usage() {
+    ${EXE_DIR}/asc reset green 
+    printf '\n find \"file_spec\" with \"text_pattern\", default search begin path is current location'
+    printf "\n Usage:\n\t %s\t file_spec pattern\n\n" "$0"
+#
+    printf "\n Predefind file specs:\n"
+    ${EXE_DIR}/asc yellow
+    printf " -bb" 
+    ${EXE_DIR}/asc cyan
+    printf " --> '%s\'\n" "${WC_BB}" 
+    ${EXE_DIR}/asc yellow
+    printf " -mk" 
+    ${EXE_DIR}/asc cyan
+    printf " --> \'%s\'\n" "${WC_MK}"  
+#
+    ${EXE_DIR}/asc green
+    printf " Options:\n" 
+    ${EXE_DIR}/asc yellow
+    printf " --path=XXX" 
+    ${EXE_DIR}/asc green
+    printf " --> Search starts at XXX directory\n"     
+#
+#
+# Note: cannot print string begin with "--", it's considered as option for printf
+# The -- is used to tell the program that whatever follows should not be interpreted as a command line option to printf.
+#  
+    ${EXE_DIR}/asc yellow
+    printf "%sfopt=YYY aa" ' --'
+    ${EXE_DIR}/asc green 
+    printf "%s pass option \"%s\" to find command\n" ' -->' "YYY aa"    
+#
+    ${EXE_DIR}/asc yellow
+    printf "%sgopt=ZZZ cc" ' --'
+    ${EXE_DIR}/asc green 
+    printf "%s> pass option \"%s\" to grep command\n" ' -->' "ZZZ cc"    
+#
+    ${EXE_DIR}/asc yellow
+    printf "%sd=n" ' -'
+    ${EXE_DIR}/asc green 
+    printf "\t%s> short format of \"%s\" for find command\n" ' -->' "-maxdepth n"    
+    printf "\t same as long format"
+    ${EXE_DIR}/asc cyan
+    printf " \"--fopt=maxdepth n\"\n" 
+#
+    ${EXE_DIR}/asc green
+    printf "\n Example1:\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t \'%s\' \"%s\" \n\n" "$0" "*.c *.h" "Hello"
+#
+    ${EXE_DIR}/asc green
+    printf "\n Example2: only list files, if no search text specified\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t \'%s\' \n" "$0" "*.c *.h" 
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc green
+    printf "\n Example3: search multiple patterns, starting at directory XXX:\n" 
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t %s \'%s\' \"%s\"\n\n" "$0" "--path=XXX" "*.c *.h" "Hello|World"
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc green
+    printf "\n Example4: use grep option -w, search \"word\" only:\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "--gopt=-w" "-bb" "DEVICETREE"
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc green
+    printf "\n Example5: use find option: \"-maxepth 2\":\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
+    ${EXE_DIR}/asc green
+    printf "\t OR, use '-d=2', a short form of '-maxdepth 2'\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "-d=2" "-bb" "DEVICETREE"
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc reset 
+}
 
 OPT_CNT=1
 while [ ! -z "$1" ] 
@@ -22,9 +101,11 @@ do
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
     fi 
-    echo "$1" | grep '^\-\-' >/dev/null
+#    echo "$1" | grep '^\-\-' >/dev/null
+    echo "$1" | grep '^\-' >/dev/null
     if [ $? -eq 0 ] ; then  
         OPT_STR_1=`echo "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+# removed trailing spaces of OPT_STR_2
         OPT_STR_2=`echo "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
 
         if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -65,6 +146,11 @@ do
             FIND_OPT="${FIND_OPT} ${OPT_STR_2}"       
         elif [ "${OPT_STR_1}" = "--gopt" ] ; then 
             GREP_OPT="${GREP_OPT} ${OPT_STR_2}"       
+        elif [ "${OPT_STR_1}" = "--help"  -o  "${OPT_STR_1}" = "-h" ] ; then 
+            this_usage
+            exit 1
+        elif [ "${OPT_STR_1}" = "-d" ] ; then 
+            FIND_OPT="-maxdepth ${OPT_STR_2}"       
         else
 #
 # anything don't know treat it as real argument
@@ -78,54 +164,8 @@ do
     shift 1
 done
 
-function usage() {
-    ${EXE_DIR}/asc reset green 
-    printf '\n find \"file_spec\" with \"text_pattern\", default search begin path is current location'
-    printf "\n Usage:\n\t %s\t file_spec pattern\n\n" "$0"
-#
-    printf "\n Predefind file specs:\n"
-    printf " -bb --> " 
-    ${EXE_DIR}/asc yellow
-    printf "'%s\'\n" "${WC_BB}" 
-    ${EXE_DIR}/asc green
-    printf " -mk --> " 
-    ${EXE_DIR}/asc yellow
-    printf "\'%s\'\n" "${WC_MK}"  
-#
-    ${EXE_DIR}/asc green
-    printf "\n Example1:\n"
-    ${EXE_DIR}/asc yellow
-    printf "\t %s\t \'%s\' \"%s\" \n\n" "$0" "*.c *.h" "Hello"
-#
-    ${EXE_DIR}/asc green
-    printf "\n Example2: only list files, if no search text specified\n"
-    ${EXE_DIR}/asc yellow
-    printf "\t %s\t \'%s\' \n" "$0" "*.c *.h" 
-    ${EXE_DIR}/asc green
-#
-    ${EXE_DIR}/asc green
-    printf "\n Example3: search multiple patterns:\n"
-    ${EXE_DIR}/asc yellow
-    printf "\t %s\t \'%s\' \"%s\"\n\n" "$0" "*.c *.h" "Hello|World"
-    ${EXE_DIR}/asc green
-#
-    ${EXE_DIR}/asc green
-    printf "\n Example4: use grep option -w, search \"word\" only:\n"
-    ${EXE_DIR}/asc yellow
-    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "--gopt=-w" "-bb" "DEVICETREE"
-    ${EXE_DIR}/asc green
-#
-    ${EXE_DIR}/asc green
-    printf "\n Example5: use find option: \"-maxepth 2\":\n"
-    ${EXE_DIR}/asc yellow
-    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
-    ${EXE_DIR}/asc green
-#
-    ${EXE_DIR}/asc reset 
-}
-
 if [ -z "$1" ] ; then 
-    usage
+    this_usage
     exit 1
 fi
 

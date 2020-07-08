@@ -2,6 +2,24 @@
 #
 # cdjump 
 #
+
+if [ "$1" = "--help" ] ; then 
+    this_usage
+    exit 1
+fi 
+
+b_DEBUG=0
+b_VERBOSE=0
+if [ "$1" = "--verbose" ] ; then 
+    b_VERBOSE=1
+    shift 1
+fi 
+if [ "$1" = "--debug" ] ; then 
+    b_DEBUG=1
+    b_VERBOSE=1
+    shift 1
+fi 
+
 if [ "$1" = "" ] ; then 
     printf "\nERROR: no input found for 1st argument: base directory\n"
     return 1
