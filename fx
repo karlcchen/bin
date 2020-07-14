@@ -100,7 +100,7 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf "\t %s\t \"%s\" \'%s\' \"%s\"\n" "$0" "--gopt=-w" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
-    printf " Example4a: change grep option to nothing\n"
+    printf " Example4a: set grep env GREP_OPT=\"\", that's empty\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s\t \"%s\" \'%s\' \"%s\"\n" "$0" "--goptnew" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
