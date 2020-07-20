@@ -70,7 +70,7 @@ function this_usage() {
     printf "%s> set new option \"%s\" for grep command\n" ' -->' "-Hw --color=auto"    
 #
     ${EXE_DIR}/asc yellow
-    printf "%sd=n" ' -'
+    printf " \"%sd=n|%sdn\"" ' -' '-'
     ${EXE_DIR}/asc green 
     printf "\t%s> short format of \"%s\" option for find command\n" ' -->' "-maxdepth n"    
     printf "\t same as long format"
@@ -110,9 +110,9 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
-    printf "\t OR, use '-d=2', a short form of '-maxdepth 2'\n"
+    printf "\t OR, use '-d2', a short form of '-maxdepth 2'\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "-d=2" "-bb" "DEVICETREE"
+    printf "\t %s\t \"%s\" \'%s\' \"%s\"\n\n" "$0" "-d2" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc reset 
@@ -127,12 +127,21 @@ do
 #    echo "$1" | grep '^\-\-' >/dev/null
     echo "$1" | grep '^\-' >/dev/null
     if [ $? -eq 0 ] ; then  
+        # removed trailing spaces of OPT_STR_2
         OPT_STR_1=`echo "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
-# removed trailing spaces of OPT_STR_2
-        OPT_STR_2=`echo "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
-
+        OPT_STR_2=""
+        echo "$1" | grep '=' >/dev/null
+        if [ $? -eq 0 ] ; then 
+            OPT_STR_2=`echo "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
+        else 
+            echo "$1" | grep "[[:digit:]]" >/dev/null
+            if [ $? -eq 0 ] ; then 
+                OPT_STR_1=`echo "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+                OPT_STR_2=`echo "$1" | sed 's/[^0-9]*//g'`
+            fi 
+        fi  
         if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nDEBUG1: option parsed #%d: \"%s\" \"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
+            printf "\nDEBUG1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
         if [ "${OPT_STR_1}" = "--verbose" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
