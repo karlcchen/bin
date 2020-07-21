@@ -8,6 +8,7 @@
 set -f
 #
 
+s_VERSION="1.1"
 EXE_NAME="`realpath $0`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 
@@ -29,7 +30,7 @@ WC_ALL='*'
 
 function this_usage() {
     ${EXE_DIR}/asc reset green 
-    printf '\n find \"file_spec\" with \"text_pattern\", default search begin path is current location'
+    printf '\n find \"file_spec\" with \"text_pattern\", default search begin path is current location, Version:%s\n' "${s_VERSION}"
     printf "\n Usage:\n\t %s\t file_spec pattern\n\n" "$0"
 #
     printf "\n Predefind find file specs:\n"
