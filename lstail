@@ -1,19 +1,84 @@
 #!/bin/bash
 #
 PARAMETER_DIR="saved_parameters"
-THIS_CMD="lstail"
-THIS_FILENAME="${PARAMETER_DIR}/${THIS_CMD}"
-VERBOSE=1
+HOME_PATH="`realpath ~`"
+THIS_CMD="`basename $0`"
+ARG_FILENAME="${HOME_PATH}/${PARAMETER_DIR}/${THIS_CMD}-args.txt"
+b_VERBOSE=0
+LS_OPT="-ltr"
+TAIL_OPT="-n3"
+TAIL_FILTER="tail ${TAIL_OPT}"
+#
+if [ "$1" = "--clean" ] ; then 
+    if [ -d "${HOME_PATH}/${PARAMETER_DIR}" ] ; then 
+        if [ "${b_VERBOSE}" -ne 0 ] ; then 
+            printf "\nINFO-1: removing dir: \"%s\"\n" "${HOME_PATH}/${PARAMETER_DIR}"
+        fi
+        rm -rf ${HOME_PATH}/${PARAMETER_DIR}
+        if [ $? -ne 0 ] ; then 
+            printf "\nERROR-1 rm -rf \"%s\" failed!\n" "${HOME_PATH}/${PARAMETER_DIR}"
+            exit 1
+        fi
+    else
+        if [ "${b_VERBOSE}" -ne 0 ] ; then 
+            printf "\nINFO-2: dir: \"%s\" does not exit!\n" "${HOME_PATH}/${PARAMETER_DIR}"
+        fi
+    fi
+    shift 1
+    if [ -z "${1}" ] ; then
+        exit 0
+    fi
+elif [ "$1" = "--list" ] ; then 
+    if [ -f "${ARG_FILENAME}" ] ; then 
+        cat ${ARG_FILENAME}
+    else
+        printf "\nERROR-2: cannot find file \"%s\"\n" "${ARG_FILENAME}"
+        exit 2
+    fi 
+    shift 1
+    if [ -z "${1}" ] ; then
+        exit 0
+    fi
+fi  
+#
+mkdir -p ${HOME_PATH}/${PARAMETER_DIR}
+if [ $? -ne 0 ] ; then 
+    printf "\nERROR-4 mkdir -p %s failed!\n" "${HOME_PATH}/${PARAMETER_DIR}"
+    exit 4
+fi
+#
 if [ -z "${1}" ] ; then
-    ARG1=`cat ~/${THIS_FILENAME}-01.arg`
-    if [ "${VERBOSE}" -ne 0 ] ; then 
-        echo -e "\t ${THIS_CMD} ${ARG1}\n"
+    if [ -f "${ARG_FILENAME}" ] ; then 
+        input="${ARG_FILENAME}"
+        LINE_CNT=1
+        while IFS= read -r line
+        do
+            if [ -e "${line}" ] ; then 
+                printf "\n%s\n" "${line}"      
+                ls ${LS_OPT} ${line} | ${TAIL_FILTER}
+            else
+                printf "\nERROR-5: file %s: line %d, path \"%s\" does not exist\n\n" "${ARG_FILENAME}" ${LINE_CNT} "${line}"
+            fi 
+            LINE_CNT=$((LINE_CNT+1))
+        done < "${input}"
+    else
+        printf "\nERROR-3: Initialize %s first:\n" "${THIS_CMD}"
+        printf "\nExample:\n"
+        printf "\t %s %s\n\n" "${THIS_CMD}" "/tftpboot/"
+        exit 3
     fi
 else
     ARG1="${1}"
+    ls ${LS_OPT} ${ARG1} | ${TAIL_FILTER}
+    if [ $? -eq 0 ] ; then 
+        if [ ! -z "${1}" ] ; then 
+            printf "\n Saving argument %s to file %s\n" "${ARG1}" "${ARG_FILENAME}"
+            printf "%s\n" "${ARG1}" >>${ARG_FILENAME}
+        fi 
+    else
+        printf "\nERROR-9: ls -ltr %s failed!\n" "${ARG1}"
+        exit 9
+    fi
 fi 
+#
 
-ls -ltr ${ARG1} | tail 
-if [ $? -eq 0 ] ; then 
-    echo "${ARG1}" >~/${THIS_FILENAME}-01.arg
-fi
