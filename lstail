@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+EXE_NAME="`realpath $0`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+
 PARAMETER_DIR="saved_parameters"
 HOME_PATH="`realpath ~`"
 THIS_CMD="`basename $0`"
@@ -54,8 +57,11 @@ if [ -z "${1}" ] ; then
         while IFS= read -r line
         do
             if [ -e "${line}" ] ; then 
-                printf "\n%s\n" "${line}"      
+                ${EXE_DIR}/asc reset cyan
+                printf "\n#%d: %s\n" ${LINE_CNT} "${line}"     
+                ${EXE_DIR}/asc green
                 ls ${LS_OPT} ${line} | ${TAIL_FILTER}
+                ${EXE_DIR}/asc reset
             else
                 printf "\nERROR-5: file %s: line %d, path \"%s\" does not exist\n\n" "${ARG_FILENAME}" ${LINE_CNT} "${line}"
             fi 
