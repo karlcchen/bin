@@ -3,25 +3,32 @@
 S_FULLNAME=`realpath $0`
 S_BASENAME=`basename $0`
 
-if [ -z "$1" ] ; then 
+if [ "$1" = "--help" -o "$1" = "-h" ] ; then 
     echo
     echo ' search *.c and *.h files for text pattern2, always start from current path'
     printf "Usage: %s\t pattern1 [pattern2]...\n" "$0"
     printf "Usage: %s\t pattern1 [pattern2]...\n" "${S_BASENAME}"
     exit 1
 fi
-while [ ! -z "$1" ] ;
-do
-#    echo 
-#    echo " Searching: \"$1\"", Path: `pwd`  
-#    echo 
-#    find . \( -name "*.c" -o -name "*.h" \) -exec fgrep -H "$1" {} \;
-#    find . \( -name "*.c" -o -name "*.h" \) -print0 | xargs -0 -I files fgrep -Hw ${GREP_OPT} "$1" files 
-#    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) -print0 | xargs -0 -I files fgrep ${GREP_OPT} "$1" files 
-#
-# Note 
-#
-    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) -print0  ${FIND_OPT} | xargs -0 fgrep ${GREP_OPT} "$1"
-#    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) ${FIND_OPT} | xargs fgrep ${GREP_OPT} "$1"
-    shift 1
-done
+
+
+if [ -z "$1" ] ; then 
+    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.S" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) ${FIND_OPT} 
+else 
+    while [ ! -z "$1" ] ;
+    do
+    #    echo 
+    #    echo " Searching: \"$1\"", Path: `pwd`  
+    #    echo 
+    #    find . \( -name "*.c" -o -name "*.h" \) -exec fgrep -H "$1" {} \;
+    #    find . \( -name "*.c" -o -name "*.h" \) -print0 | xargs -0 -I files fgrep -Hw ${GREP_OPT} "$1" files 
+    #    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) -print0 | xargs -0 -I files fgrep ${GREP_OPT} "$1" files 
+    #
+    # Notes:
+    #  use -print0 to wrok with filenames with spaces 
+    # 
+        find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.S" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) ${FIND_OPT} -print0 | xargs -0 fgrep ${GREP_OPT} "$1"
+    #    find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.S" -o -name "*.cc" -o -name "*.cpp" -o -name "*.cxx" -o -name "*.hpp" \) ${FIND_OPT} | xargs fgrep ${GREP_OPT} "$1"
+        shift 1
+    done
+fi
