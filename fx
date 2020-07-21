@@ -13,13 +13,18 @@ EXE_DIR="`dirname ${EXE_NAME}`"
 
 b_VERBOSE=0
 b_DEBUG=0
-FIND_PATH="./"
+FIND_PATH="."
 FIND_TYPE="f"
+export FIND_OPT="${FIND_OPT} -prune"
+XARGS_OPT=""
 ARG_SAVED=()
 
 # predefined wildcards 
 WC_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
 WC_MK='make* Make* *.mk *.mak GNUmake*' 
+WC_CH="*.c *.h *.S"
+#WC_CH="*.c *.h"
+WC_CCH="${WC_CH} *.cc *.cpp *.cxx *.hpp"
 WC_ALL='*'
 
 function this_usage() {
@@ -37,6 +42,16 @@ function this_usage() {
     printf " -mk " 
     ${EXE_DIR}/asc cyan
     printf " --> \'%s\'\n" "${WC_MK}"  
+#
+    ${EXE_DIR}/asc yellow
+    printf " -ch " 
+    ${EXE_DIR}/asc cyan
+    printf " --> \'%s\'\n" "${WC_CH}"  
+#
+    ${EXE_DIR}/asc yellow
+    printf " -cch" 
+    ${EXE_DIR}/asc cyan
+    printf " --> \'%s\'\n" "${WC_CCH}"  
 #
     ${EXE_DIR}/asc yellow
     printf " -all" 
@@ -226,6 +241,16 @@ elif [ "${FIND_FILES}" = "-mk" ] ; then
     if [ ${b_VERBOSE} -ne 0 ] ; then 
         printf "\nINFO: -mk option, change search list to: \'%s\'\n" "${FIND_FILES}"
     fi 
+elif [ "${FIND_FILES}" = "-ch" ] ; then 
+    FIND_FILES="${WC_CH}"
+    if [ ${b_VERBOSE} -ne 0 ] ; then 
+        printf "\nINFO: -ch option, change search list to: \'%s\'\n" "${FIND_FILES}"
+    fi 
+elif [ "${FIND_FILES}" = "-cch" ] ; then 
+    FIND_FILES="${WC_CCH}"
+    if [ ${b_VERBOSE} -ne 0 ] ; then 
+        printf "\nINFO: -cch option, change search list to: \'%s\'\n" "${FIND_FILES}"
+    fi 
 elif [ "${FIND_FILES}" = "-all" ] ; then 
     FIND_FILES="${WC_ALL}"
     if [ ${b_VERBOSE} -ne 0 ] ; then 
@@ -260,25 +285,34 @@ else
 #   set +f
 fi 
 
+# ========================================================================================================================
 LOOP=1
 if [ -z "${ARG_SAVED[${LOOP}]}" ] ; then 
+#
+# no grep texts
+#
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}" 
         ${EXE_DIR}/asc reset yellow
-        echo -e "\t find ${FIND_PATH} ${FIND_OPT} -type ${FIND_TYPE} ${name_patterns[@]}\n" 
+        echo -e "\t find ${FIND_PATH} -type ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_OPT}\n" 
         ${EXE_DIR}/asc reset 
     else
-        find ${FIND_PATH} ${FIND_OPT} -type ${FIND_TYPE} "${name_patterns[@]}" 
+#
+# need "\(" so that type is working for all "-name" not just the first one
+#
+        find ${FIND_PATH} -type ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_OPT} 
     fi
 else 
+#
+# with grep texts
+#
     while [ ! -z "${ARG_SAVED[${LOOP}]}" ] ;
     do
     	GREP_TEXT="${ARG_SAVED[${LOOP}]}"
     	if [ ${b_DEBUG} -ne 0 ] ; then 
     		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
                 ${EXE_DIR}/asc reset yellow
-    		echo -e "\t find ${FIND_PATH} ${FIND_OPT} -type ${FIND_TYPE} \( ${name_patterns[@]} \)" 
-    		printf "\t grep \"%s\"\n\n" "${GREP_TEXT}" 
+    		echo -e "\t find ${FIND_PATH} -type ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_OPT} | xargs ${XARGS_OPT} fgrep ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
                 ${EXE_DIR}/asc reset 
     	else 
 #
@@ -287,9 +321,13 @@ else
 #
 # note: it is possible tell grep to search multiple patterns, use -e "p1" -e "p2", etc..., but result could be a little bit different
 #
-#            ${EXE_DIR}/asc reset yellow
-    	    find ${FIND_PATH} ${FIND_OPT} -type ${FIND_TYPE} "${name_patterns[@]}" | xargs fgrep ${GREP_OPT} "${GREP_TEXT}"
-#            ${EXE_DIR}/asc reset 
+#
+# TIPS Note: 
+# -  need "\(" so that "type -f" is working for all "-name" not just the first one
+# -  also makes -print0 working on all found files...
+# - using -print0 so filenames with "spaces" can be passed to grep correctly
+#
+            find ${FIND_PATH} -type ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_OPT} -print0 | xargs --null ${XARGS_OPT} fgrep ${GREP_OPT} "${GREP_TEXT}"
     	fi 
     	LOOP=$((LOOP+1))
     done 
