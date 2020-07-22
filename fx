@@ -87,9 +87,9 @@ function this_usage() {
 # The -- is used to tell the program that whatever follows should not be interpreted as a command line option to printf.
 #  
     ${EXE_DIR}/asc yellow
-    printf " \"%sfopt|-f=YYY aa\"" '--'
+    printf " \"%sfopt|-f=-maxdepth 2\"" '--'
     ${EXE_DIR}/asc green 
-    printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "YYY aa" "FIND_OPT"   
+    printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "-maxdepth 2" "FIND_OPT"   
 #
     ${EXE_DIR}/asc yellow
     printf " \"--fpath|-fp=XXX\"" 
@@ -163,7 +163,7 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf " \"%soptend\"" '--'
     ${EXE_DIR}/asc green 
-    printf "%s> end of options parsing, treat arguments after here as non-options arguments\n" ' -->' 
+    printf "%s> indicate end of all options parsing, treat arguments followed as non-options arguments\n" ' -->' 
 #
     ${EXE_DIR}/asc yellow
     printf " \"%sd=n|%sdn\"" ' -' '-'
