@@ -43,7 +43,7 @@ FIND_PATTERN_ALL='*'
 
 function this_usage() {
     ${EXE_DIR}/asc reset green 
-    printf '\n find \"files\" with \"name patterns\", default search begin path is current location. Version:%s\n' "${s_VERSION}"
+    printf '\n find \"filename patterns\" with \"content text patterns\", default search path beginning is current directory. Version:%s\n' "${s_VERSION}"
     printf " Usage:\n\t %s\t filename_patterns file_content_patterns\n" "${EXE_BASE}"
 #
     printf "\n Predefind \"%s\" file test \"%s\" patterns:\n" "${FIND_EXE}" "${FIND_NAME}"
