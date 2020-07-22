@@ -13,8 +13,13 @@ EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 
-GREP_EXE="fgrep"
+#GREP_EXE="fgrep"
+# Note: fgrep doesn't not take "-E" for pattern "XXX|YYY"
+GREP_EXE="grep"
+# -E use regular expression 
+#GREP_OPT="${GREP_OPT} -E"
 FIND_EXE="find"
+#FIND_OPT="${FIND_OPT}"
 
 b_VERBOSE=0
 b_DEBUG=0
@@ -27,9 +32,10 @@ FIND_TYPE="-type f"
 FIND_TYPE_LIST="f l d b c p s D"
 # default main option of find, must appeared before the first search path
 # default is "-P", other options are : -L -H -Olevel
-FIND_MAIN_OPT=""
-FIND_MAIN_OPT_LIST="P L H O"
-export FIND_OPT="${FIND_OPT} -prune"
+FIND_HEAD_OPT=""
+FIND_HEAD_OPT_LIST="P L H O"
+FIND_TAIL_OPT="-prune"
+
 XARGS_OPT=""
 ARG_SAVED=()
 
@@ -81,31 +87,23 @@ function this_usage() {
 # The -- is used to tell the program that whatever follows should not be interpreted as a command line option to printf.
 #  
     ${EXE_DIR}/asc yellow
-    printf ' \"%sFOPT=%s' '--' '-P'
-    ${EXE_DIR}/asc green 
-    printf "%s set find main option to %s, as first option placed after find command\n" ' -->' "-P"
-    printf "\t\t Valid find main optioins are: "
-    ${EXE_DIR}/asc yellow
-    printf "%s\n" "${FIND_MAIN_OPT_LIST}"
-    ${EXE_DIR}/asc green
-#
-    ${EXE_DIR}/asc yellow
-    printf " \"%sfopt=YYY aa\"" '--'
+    printf " \"%sfopt|-f=YYY aa\"" '--'
     ${EXE_DIR}/asc green 
     printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "YYY aa" "FIND_OPT"   
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--fpath=XXX|-p=XXX\"" 
+    printf " \"--fpath|-fp=XXX\"" 
     ${EXE_DIR}/asc green
     printf " --> Search starts at XXX directory\n"     
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--ftype=l[,d]|-t=l[,d]\"" 
+    printf " \"--ftype|-ft=l[,d]\"" 
     ${EXE_DIR}/asc green
     printf " --> set find file type from default of \"%s\" to \"-type l\", and optionally \"-type d\" as well\n" "${FIND_TYPE}"
     printf "\t\t --ftype without input deletes the option, \"find\" default searches all file types\n"
     printf "\t\t Valid find types are: "
     ${EXE_DIR}/asc yellow
+
 #
 #              b      block (buffered) special
 #              c      character (unbuffered) special
@@ -128,7 +126,7 @@ function this_usage() {
     printf " to separate multiple options\n" "${FIND_TYPE_LIST}"
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--fname=-iname\"" "-iname"
+    printf " \"--fname|-fn=-iname\"" "-iname"
     ${EXE_DIR}/asc green
     printf " --> change find test case from default \"%s\" to \"%s\"\n" "${FIND_NAME}"  "-iname"  
     printf "\t\t Valid find test are: "
@@ -138,12 +136,27 @@ function this_usage() {
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc yellow
-    printf " \"%sgopt=-w\"" '--'
+    printf ' \"%sfhead|-fh=%s\"' '--' '-P' 
+    ${EXE_DIR}/asc green 
+    printf " %s set \"%s\" (head) option to %s, the first option of the command\n" ' -->' "${FIND_EXE}" "-P"
+    printf "\t\t Valid (head) optioins are: "
+    ${EXE_DIR}/asc yellow
+    printf "%s\n" "${FIND_HEAD_OPT_LIST}"
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc yellow
+    printf ' \"%sftail|-ft=%s\"' '--' '-prune' 
+    ${EXE_DIR}/asc green 
+    printf " %s set \"%s\" (tail) option to %s, the last option of the command\n" ' -->' "${FIND_EXE}" "-prune"
+    ${EXE_DIR}/asc green
+#
+    ${EXE_DIR}/asc yellow
+    printf " \"%sgopt|-g=-w\"" '--'
     ${EXE_DIR}/asc green 
     printf "%s> append option \"%s\" to env %s, used when calling grep command\n" ' -->' "-w" "GREP_OPT"   
 #
     ${EXE_DIR}/asc yellow
-    printf " \"%sgopt %sgopt=-Hw --color=auto\"" '--' '--'
+    printf " \"-g -g=-Hw --color=auto\"" 
     ${EXE_DIR}/asc green 
     printf "%s> first delete old grep options, then set new grep options to \"%s\"\n" ' -->' "-Hw --color=auto"    
 #
@@ -173,19 +186,23 @@ function this_usage() {
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green
-    printf " Example 3: search multiple patterns, starting at directory XXX:\n" 
+    printf " Example 3: search multiple patterns, starting from directory : ../\n" 
     ${EXE_DIR}/asc yellow
-    printf "\t %s %s \'%s\' \"%s\"\n" "${EXE_BASE}" "--fpath=XXX" "*.c *.h" "Hello|World"
+    printf "\t %s %s \'%s\' \"%s\" \"%s\"\n" "${EXE_BASE}" "-fp=../" "*.c *.h" "Hello" "World"
+    ${EXE_DIR}/asc green
+    printf "\t OR, same as last example, but run \"find\" onlY once for both patterns, using regular expression, grep option -E\n"
+    ${EXE_DIR}/asc yellow
+    printf "\t %s %s \'%s\' \"%s\" \"%s\"\n" "${EXE_BASE}" "-fp=../" "--gopt=-E" "*.c *.h" "Hello|World"
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green 
     printf " Example 4: append grep option -w, search \"word\" only:\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--gopt=-w" "-bb" "DEVICETREE"
+    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "-g=-w" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green 
     printf " Example 4a: set grep env GREP_OPT=\"\", which is empty\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--gopt" "-bb" "DEVICETREE"
+    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "-g" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green 
@@ -245,7 +262,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
-        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-t" ] ; then 
+        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-ft" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-1: --ftype=\"\", find file type changed from \"%s\" to empty\n" "${FIND_TYPE}"
@@ -257,19 +274,31 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-3: find type changed to: \"%s\"\n" "${FIND_TYPE}"
             fi 
-        elif [ "${OPT_STR_1}" = "--FOPT" ] ; then 
+        elif [ "${OPT_STR_1}" = "--fhead" -o "${OPT_STR_1}" = "-fh" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
-                    printf "\nWARN-2: --FOPT=\"\", find (main) OPTIONS changed from \"%s\" to empty\n" "${FIND_MAIN_OPT}"
+                    printf "\nWARN-2: --fhead=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
                 fi
-                FIND_MAIN_OPT=""
+                FIND_HEAD_OPT=""
             else
-                FIND_MAIN_OPT="${FIND_MAIN_OPT} ${OPT_STR_2}" 
+                FIND_HEAD_OPT="${FIND_HEAD_OPT} ${OPT_STR_2}" 
             fi
             if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-4: set find (main) OPTIONS changed to: \"%s\"\n" "${FIND_MAIN_OPT}"
+                printf "\nINFO-4: set \"%s\" (head) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
             fi 
-        elif [ "${OPT_STR_1}" = "--fname" ] ; then 
+        elif [ "${OPT_STR_1}" = "--ftail" -o "${OPT_STR_1}" = "-ft" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nWARN-2: --ftail=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
+                fi
+                FIND_TAIL_OPT=""
+            else
+                FIND_TAIL_OPT="${FIND_TAIL_OPT} ${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-4: set \"%s\" (tail) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
+            fi 
+        elif [ "${OPT_STR_1}" = "--fname" -o "${OPT_STR_1}" = "-fn" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nERROR-OPT: --fname cannot be empty\n" 
@@ -280,7 +309,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-4: set find TEST name to: \"%s\"\n" "${FIND_NAME}"
             fi 
-        elif [ "${OPT_STR_1}" = "--fopt" ] ; then 
+        elif [ "${OPT_STR_1}" = "--fopt" -o "${OPT_STR_1}" = "-f" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-2: --fopt=\"\", find options changed from \"%s\" to empty\n" "${FIND_OPT}"
@@ -292,7 +321,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-4: set find options changed to: \"%s\"\n" "${FIND_OPT}"
             fi 
-        elif [ "${OPT_STR_1}" = "--gopt" ] ; then 
+        elif [ "${OPT_STR_1}" = "--gopt" -o "${OPT_STR_1}" = "-g" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-3: --gopt=\"\", grep options changed from \"%s\" to empty\n" "${GREP_OPT}"
@@ -304,7 +333,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-5: set grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
-        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-p" ] ; then 
+        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-fp" ] ; then 
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-6: find starting path=%s\n" "${OPT_STR_1}"
             fi 
@@ -318,7 +347,7 @@ do
             this_usage
             exit 1
         elif [ "${OPT_STR_1}" = "-d" ] ; then 
-            FIND_OPT="-maxdepth ${OPT_STR_2}"       
+            FIND_OPT="-maxdepth ${OPT_STR_2} ${FIND_OPT}"       
         elif [ "${OPT_STR_1}" = "--optend" ] ; then 
 #
 # no more options and skip this option 
@@ -348,49 +377,53 @@ if [ -z "${ARG_SAVED[0]}" ] ; then
 fi
 
 #
+FIND_PATTERN=""
 FIND_FILES="${ARG_SAVED[0]}"
-if [ "${FIND_FILES}" = "-bb" ] ; then 
-    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_BB}"
-    if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-10: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
+if [ ! -z "${FIND_FILES}" ] ; then 
+    if [ "${FIND_FILES}" = "-bb" ] ; then 
+        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_BB}"
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nINFO-10: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
+        fi 
+    elif [ "${FIND_FILES}" = "-mk" ] ; then 
+        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_MK}"
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nINFO-11: -mk option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+        fi 
+    elif [ "${FIND_FILES}" = "-ch" ] ; then 
+        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CH}"
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nINFO-12: -ch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+        fi 
+    elif [ "${FIND_FILES}" = "-cch" ] ; then 
+        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CCH}"
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nINFO-13 -cch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+        fi 
+    elif [ "${FIND_FILES}" = "-all" ] ; then 
+        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_ALL}"
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nINFO-14: -all option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+        fi 
+    else 
+        FIND_PATTERN="${FIND_FILES}"
     fi 
-elif [ "${FIND_FILES}" = "-mk" ] ; then 
-    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_MK}"
-    if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-11: -mk option, change search list to: \'%s\'\n" "${FIND_FILES}"
-    fi 
-elif [ "${FIND_FILES}" = "-ch" ] ; then 
-    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_CH}"
-    if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-12: -ch option, change search list to: \'%s\'\n" "${FIND_FILES}"
-    fi 
-elif [ "${FIND_FILES}" = "-cch" ] ; then 
-    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_CCH}"
-    if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-13 -cch option, change search list to: \'%s\'\n" "${FIND_FILES}"
-    fi 
-elif [ "${FIND_FILES}" = "-all" ] ; then 
-    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_ALL}"
-    if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-14: -all option, change search list to: \'%s\'\n" "${FIND_FILES}"
-    fi 
-fi 
-
+fi
 if [ ${b_DEBUG} -ne 0 ] ; then 
-    printf "\nDEBUG2: FIND_FILES=\"%s\"\n" "${FIND_FILES}"
+    printf "\nDEBUG2: FIND_PATTERN=\"%s\"\n" "${FIND_PATTERN}"
 fi 
 
 #
 name_patterns=()
 LOOP=1
-if [ "${FIND_FILES}" = "*" ] ; then 
+if [ "${FIND_PATTERN}" = "*" ] ; then 
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
     if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-20: search all files %s\n" "${FIND_FILES}" 
+        printf "\nINFO-20: search all files %s\n" "${FIND_PATTERN}" 
     fi 
 else 
-    for pattern in ${FIND_FILES}
+    for pattern in ${FIND_PATTERN}
     do
         if [ ${b_DEBUG} -ne 0 ] ; then 
             printf "### INFO-21: search files #%s: \"%s\"\n" "${LOOP}" "$pattern"
@@ -412,13 +445,13 @@ if [ -z "${ARG_SAVED[${LOOP}]}" ] ; then
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}" 
         ${EXE_DIR}/asc reset yellow
-        echo -e "\t ${FIND_EXE} ${FIND_MAIN_OPT} ${FIND_PATH} ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_OPT}\n" 
+        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT}\n" 
         ${EXE_DIR}/asc reset 
     else
 #
 # need "\(" so that type is working for all ${FIND_NAME}("-name") not just the first one
 #
-        ${FIND_EXE} ${FIND_MAIN_OPT} ${FIND_PATH} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_OPT} 
+        ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}
     fi
 else 
 #
@@ -430,7 +463,7 @@ else
     	if [ ${b_DEBUG} -ne 0 ] ; then 
     		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
                 ${EXE_DIR}/asc reset yellow
-    		echo -e "\t ${FIND_EXE} ${FIND_MAIN_OPT} ${FIND_PATH} ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_OPT} | xargs ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
+    		echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT} -print 0 | xargs --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
                 ${EXE_DIR}/asc reset 
     	else 
 #
@@ -445,7 +478,7 @@ else
 # -  also makes -print0 working on all found files...
 # - using -print0 so filenames with "spaces" can be passed to grep correctly
 #
-            ${FIND_EXE} ${FIND_MAIN_OPT} ${FIND_PATH} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_OPT} -print0 | xargs --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
+            ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT} -print0 | xargs --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
     	fi 
     	LOOP=$((LOOP+1))
     done
