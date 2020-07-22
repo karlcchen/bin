@@ -100,9 +100,9 @@ function this_usage() {
     printf " --> Search starts at XXX directory\n"     
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--ftype=l|-t=l\"" 
+    printf " \"--ftype=l[,d]|-t=l[,d]\"" 
     ${EXE_DIR}/asc green
-    printf " --> set find file type from default of \"%s\" to \"-type l\"\n" "${FIND_TYPE}"    
+    printf " --> set find file type from default of \"%s\" to \"-type l\", and optionally \"-type d\" as well\n" "${FIND_TYPE}"
     printf "\t\t --ftype without input deletes the option, \"find\" default searches all file types\n"
     printf "\t\t Valid find types are: "
     ${EXE_DIR}/asc yellow
@@ -119,8 +119,13 @@ function this_usage() {
 #              s      socket
 #              D      door (Solaris)
 #
-    printf "%s\n" "${FIND_TYPE_LIST}"
+    printf "%s" "${FIND_TYPE_LIST}"
     ${EXE_DIR}/asc green
+    printf ", Note: use " 
+    ${EXE_DIR}/asc yellow
+    printf "\"%s\" comma" ","
+    ${EXE_DIR}/asc green
+    printf " to separate multiple options\n" "${FIND_TYPE_LIST}"
 #
     ${EXE_DIR}/asc yellow
     printf " \"--fname=-iname\"" "-iname"
