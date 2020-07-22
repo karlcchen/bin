@@ -20,6 +20,7 @@ b_VERBOSE=0
 b_DEBUG=0
 
 FIND_NAME="-name"
+#FIND_NAME="-iname"
 FIND_NAME_LIST="-name -iname -lname -ilname"
 FIND_PATH="."
 FIND_TYPE="-type f"
@@ -32,46 +33,45 @@ export FIND_OPT="${FIND_OPT} -prune"
 XARGS_OPT=""
 ARG_SAVED=()
 
-
-# predefined wildcards 
-WC_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
-WC_MK='make* Make* *.mk *.mak GNUmake*' 
-WC_CH="*.c *.h *.S"
-#WC_CH="*.c *.h"
-WC_CCH="${WC_CH} *.cc *.cpp *.cxx *.hpp"
-WC_ALL='*'
+# predefined wildcards for find -name patterns
+FIND_PATTERN_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
+FIND_PATTERN_MK='make* Make* *.mk *.mak GNUmake*' 
+FIND_PATTERN_CH="*.c *.h *.S"
+#FIND_PATTERN_CH="*.c *.h"
+FIND_PATTERN_CCH="${FIND_PATTERN_CH} *.cc *.cpp *.cxx *.hpp"
+FIND_PATTERN_ALL='*'
 
 function this_usage() {
     ${EXE_DIR}/asc reset green 
-    printf '\n find \"file_spec\" with \"text_pattern\", default search begin path is current location, Version:%s\n' "${s_VERSION}"
-    printf "\n Usage:\n\t %s\t file_spec pattern\n\n" "$0"
+    printf '\n find \"files\" with \"name patterns\", default search begin path is current location. Version:%s\n' "${s_VERSION}"
+    printf " Usage:\n\t %s\t filename_patterns file_content_patterns\n" "${EXE_BASE}"
 #
-    printf "\n Predefind find TEST \"%s\" patterns:" "${FIND_NAME}"
+    printf "\n Predefind \"%s\" file test \"%s\" patterns:\n" "${FIND_EXE}" "${FIND_NAME}"
 #
     ${EXE_DIR}/asc yellow
     printf " -bb " 
     ${EXE_DIR}/asc cyan
-    printf " --> '%s\'\n" "${WC_BB}" 
+    printf " --> '%s\'\n" "${FIND_PATTERN_BB}" 
 #
     ${EXE_DIR}/asc yellow
     printf " -mk " 
     ${EXE_DIR}/asc cyan
-    printf " --> \'%s\'\n" "${WC_MK}"  
+    printf " --> \'%s\'\n" "${FIND_PATTERN_MK}"  
 #
     ${EXE_DIR}/asc yellow
     printf " -ch " 
     ${EXE_DIR}/asc cyan
-    printf " --> \'%s\'\n" "${WC_CH}"  
+    printf " --> \'%s\'\n" "${FIND_PATTERN_CH}"  
 #
     ${EXE_DIR}/asc yellow
     printf " -cch" 
     ${EXE_DIR}/asc cyan
-    printf " --> \'%s\'\n" "${WC_CCH}"  
+    printf " --> \'%s\'\n" "${FIND_PATTERN_CCH}"  
 #
     ${EXE_DIR}/asc yellow
     printf " -all" 
     ${EXE_DIR}/asc cyan
-    printf " --> \'%s\'\n\n" "${WC_ALL}"  
+    printf " --> \'%s\'\n" "${FIND_PATTERN_ALL}"  
 # options: begin ==========================================================
 #
     ${EXE_DIR}/asc green
@@ -95,12 +95,12 @@ function this_usage() {
     printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "YYY aa" "FIND_OPT"   
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--path=XXX|-p=XXX\"" 
+    printf " \"--fpath=XXX|-p=XXX\"" 
     ${EXE_DIR}/asc green
     printf " --> Search starts at XXX directory\n"     
 #
     ${EXE_DIR}/asc yellow
-    printf " \"--ftype=l|-f=l\"" 
+    printf " \"--ftype=l|-t=l\"" 
     ${EXE_DIR}/asc green
     printf " --> set find file type from default of \"%s\" to \"-type l\"\n" "${FIND_TYPE}"    
     printf "\t\t --ftype without input deletes the option, \"find\" default searches all file types\n"
@@ -155,38 +155,38 @@ function this_usage() {
     ${EXE_DIR}/asc cyan
     printf " \"--fopt=maxdepth n\"\n" 
 #
-    ${EXE_DIR}/asc green
-    printf "\n Example1:\n"
+    ${EXE_DIR}/asc green 
+    printf " Example 1:\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s \'%s\' \"%s\" \n" "${EXE_BASE}" "*.c *.h" "Hello"
 #
-    ${EXE_DIR}/asc green
-    printf "\n Example2: only list files, if no search text specified\n"
+    ${EXE_DIR}/asc green 
+    printf " Example 2: only list files, if no search text specified\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s \'%s\' \n" "${EXE_BASE}" "*.c *.h" 
     printf "\t %s \'%s\' \n" "${EXE_BASE}" "-bb" 
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green
-    printf "\n Example3: search multiple patterns, starting at directory XXX:\n" 
+    printf " Example 3: search multiple patterns, starting at directory XXX:\n" 
     ${EXE_DIR}/asc yellow
-    printf "\t %s %s \'%s\' \"%s\"\n" "${EXE_BASE}" "--path=XXX" "*.c *.h" "Hello|World"
+    printf "\t %s %s \'%s\' \"%s\"\n" "${EXE_BASE}" "--fpath=XXX" "*.c *.h" "Hello|World"
     ${EXE_DIR}/asc green
 #
-    ${EXE_DIR}/asc green
-    printf "\n Example4: append grep option -w, search \"word\" only:\n"
+    ${EXE_DIR}/asc green 
+    printf " Example 4: append grep option -w, search \"word\" only:\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--gopt=-w" "-bb" "DEVICETREE"
-    ${EXE_DIR}/asc green
-    printf " Example4a: set grep env GREP_OPT=\"\", which is empty\n"
+    ${EXE_DIR}/asc green 
+    printf " Example 4a: set grep env GREP_OPT=\"\", which is empty\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--gopt" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
 #
-    ${EXE_DIR}/asc green
-    printf "\n Example5: use find option: \"-maxepth 2\":\n"
+    ${EXE_DIR}/asc green 
+    printf " Example 5: use find option: \"-maxepth 2\":\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n\n" "${EXE_BASE}" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
+    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
     printf "\t OR, use '-d2', a short form of '-maxdepth 2'\n"
     ${EXE_DIR}/asc yellow
@@ -240,7 +240,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
-        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-f" ] ; then 
+        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-t" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-1: --ftype=\"\", find file type changed from \"%s\" to empty\n" "${FIND_TYPE}"
@@ -299,14 +299,14 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-5: set grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
-        elif [ "${OPT_STR_1}" = "--path" -o "${OPT_STR_1}" = "-p" ] ; then 
+        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-p" ] ; then 
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-6: find starting path=%s\n" "${OPT_STR_1}"
             fi 
             if [ -d "${OPT_STR_2}" ] ; then 
                 FIND_PATH="${OPT_STR_2}"
             else
-                printf "\nERROR1: option --path=%s directory \"%s\" does not exist!\n\n" "${OPT_STR_2}" "${OPT_STR_2}"
+                printf "\nERROR1: option --fpath=%s directory \"%s\" does not exist!\n\n" "${OPT_STR_2}" "${OPT_STR_2}"
                 exit 1
             fi 
         elif [ "${OPT_STR_1}" = "--help"  -o  "${OPT_STR_1}" = "-h" ] ; then 
@@ -345,27 +345,27 @@ fi
 #
 FIND_FILES="${ARG_SAVED[0]}"
 if [ "${FIND_FILES}" = "-bb" ] ; then 
-    FIND_FILES="${FIND_FILES} ${WC_BB}"
+    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_BB}"
     if [ ${b_DEBUG} -ne 0 ] ; then 
-        printf "\nINFO-10: -bb option, change search list to: \'%s\'\n" "${WC_BB}" 
+        printf "\nINFO-10: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
     fi 
 elif [ "${FIND_FILES}" = "-mk" ] ; then 
-    FIND_FILES="${FIND_FILES} ${WC_MK}"
+    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_MK}"
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nINFO-11: -mk option, change search list to: \'%s\'\n" "${FIND_FILES}"
     fi 
 elif [ "${FIND_FILES}" = "-ch" ] ; then 
-    FIND_FILES="${FIND_FILES} ${WC_CH}"
+    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_CH}"
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nINFO-12: -ch option, change search list to: \'%s\'\n" "${FIND_FILES}"
     fi 
 elif [ "${FIND_FILES}" = "-cch" ] ; then 
-    FIND_FILES="${FIND_FILES} ${WC_CCH}"
+    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_CCH}"
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nINFO-13 -cch option, change search list to: \'%s\'\n" "${FIND_FILES}"
     fi 
 elif [ "${FIND_FILES}" = "-all" ] ; then 
-    FIND_FILES="${FIND_FILES} ${WC_ALL}"
+    FIND_FILES="${FIND_FILES} ${FIND_PATTERN_ALL}"
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nINFO-14: -all option, change search list to: \'%s\'\n" "${FIND_FILES}"
     fi 
