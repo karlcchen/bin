@@ -429,19 +429,20 @@ do
     shift 1
 done
 
-if [ -z "${ARG_SAVED[0]}" ] ; then 
+if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then 
     this_usage
     exit 1
 fi
 
-if [ ${N_ARG_SAVED} -eq 0 ] ; then 
-    printf "\nERROR: N_ARG_SAVED shoud not be zero!\n\n"
-    exit 1
-fi 
-
 #
+NEXT_ARG_IDX=0
 if [ "${FIND_PATTERN}" = "" ] ; then 
-    FIND_PATTERN="${ARG_SAVED[0]}" 
+    if [ "${ARG_SAVED[${NEXT_ARG_IDX}]}" = "" ] ; then 
+        printf "\nERROR-30: ARG_SAVED[%d] should not be empty here !\n" ${NEXT_ARG_IDX}
+        exit 1
+    fi 
+    FIND_PATTERN="${ARG_SAVED[${NEXT_ARG_IDX}]}" 
+    NEXT_ARG_IDX=$((NEXT_ARG_IDX+1))
 fi  
 
 if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -458,29 +459,29 @@ if [ ${b_DEBUG} -ne 0 ] ; then
 fi 
 
 #
-LOOP=0
 name_patterns=()
+N_NAME_PATTERN=0
 if [ "${FIND_PATTERN}" = "*" ] ; then 
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nINFO-30: search all files %s\n" "${FIND_PATTERN}" 
     fi 
+    N_NAME_PATTERN=$((N_NAME_PATTERN+1))
 else 
     for pattern in ${FIND_PATTERN}
     do
-        LOOP=$((LOOP+1))
         if [ ${b_DEBUG} -ne 0 ] ; then 
             printf "### INFO-31: search files #%s: \"%s\"\n" "${LOOP}" "$pattern"
         fi 
         name_patterns+=(-o ${FIND_NAME} "${pattern}")
+        N_NAME_PATTERN=$((N_NAME_PATTERN+1))
     done
     name_patterns=("${name_patterns[@]:1}")
 fi 
 
 # ========================================================================================================================
-LOOP=0
-if [ -z "${ARG_SAVED[${LOOP}]}" ] ; then 
+if [ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ; then 
 #
 # no grep texts
 #
@@ -503,10 +504,9 @@ else
 #
 # with grep texts
 #
-    while [ ! -z "${ARG_SAVED[${LOOP}]}" ] ;
+    while [ ! -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ;
     do
-      	LOOP=$((LOOP+1))
-    	GREP_TEXT="${ARG_SAVED[${LOOP}]}"
+    	GREP_TEXT="${ARG_SAVED[${NEXT_ARG_IDX}]}"
     	if [ ${b_DEBUG} -ne 0 ] ; then 
     		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
                 ${EXE_DIR}/asc reset yellow
@@ -532,6 +532,7 @@ else
 # if nothing found/matched, return is non-zero 
 # continue to next loop even if nothing matched 
     	fi 
+       	NEXT_ARG_IDX=$((NEXT_ARG_IDX+1))
     done
 fi
 
