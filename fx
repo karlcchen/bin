@@ -227,6 +227,8 @@ function this_usage() {
     ${EXE_DIR}/asc reset 
 }
 
+FIND_PATTERN=""
+N_ARG_SAVED=0
 OPT_CNT=1
 while [ ! -z "$1" ] 
 do 
@@ -250,7 +252,7 @@ do
             fi 
         fi  
         if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nDEBUG1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
+            printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
         if [ "${OPT_STR_1}" = "--verbose" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
@@ -379,6 +381,33 @@ do
             exit 1
         elif [ "${OPT_STR_1}" = "-d" ] ; then 
             FIND_OPT="-maxdepth ${OPT_STR_2} ${FIND_OPT}"       
+#========================================================================================
+        elif [ "${OPT_STR_1}" = "-bb" ] ; then 
+            FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_BB}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-20: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
+            fi 
+        elif [ "${OPT_STR_1}" = "-mk" ] ; then 
+            FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_MK}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-21: -mk option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+            fi 
+        elif [ "${OPT_STR_1}" = "-ch" ] ; then 
+            FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CH}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-22: -ch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+            fi 
+        elif [ "${OPT_STR_1}" = "-cch" ] ; then 
+            FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CCH}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-23 -cch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+            fi 
+        elif [ "${OPT_STR_1}" = "-all" ] ; then 
+            FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_ALL}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-24: -all option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
+            fi 
+#==============================================================================
         elif [ "${OPT_STR_1}" = "--optend" ] ; then 
 #
 # no more options and skip this option 
@@ -390,63 +419,47 @@ do
 # anything don't know treat it as real argument
 #
             ARG_SAVED+=("$1")
+            N_ARG_SAVED=$((N_ARG_SAVED+1))
         fi
     else
         ARG_SAVED+=("$1")
+        N_ARG_SAVED=$((N_ARG_SAVED+1))
     fi
     OPT_CNT=$((OPT_CNT+1))
     shift 1
 done
-
-if [ ${b_DEBUG} -ne 0 ] ; then 
-    echo -e "\n DEBUG: ARG_SAVED=\"${ARG_SAVED[@]}\"\n"
-fi 
 
 if [ -z "${ARG_SAVED[0]}" ] ; then 
     this_usage
     exit 1
 fi
 
-#
-FIND_PATTERN=""
-FIND_FILES="${ARG_SAVED[0]}"
-if [ ! -z "${FIND_FILES}" ] ; then 
-    if [ "${FIND_FILES}" = "-bb" ] ; then 
-        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_BB}"
-        if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nINFO-20: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
-        fi 
-    elif [ "${FIND_FILES}" = "-mk" ] ; then 
-        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_MK}"
-        if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nINFO-21: -mk option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
-        fi 
-    elif [ "${FIND_FILES}" = "-ch" ] ; then 
-        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CH}"
-        if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nINFO-22: -ch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
-        fi 
-    elif [ "${FIND_FILES}" = "-cch" ] ; then 
-        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CCH}"
-        if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nINFO-23 -cch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
-        fi 
-    elif [ "${FIND_FILES}" = "-all" ] ; then 
-        FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_ALL}"
-        if [ ${b_DEBUG} -ne 0 ] ; then 
-            printf "\nINFO-24: -all option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
-        fi 
-    else 
-        FIND_PATTERN="${FIND_FILES}"
-    fi 
-fi
-if [ ${b_DEBUG} -ne 0 ] ; then 
-    printf "\nDEBUG2: FIND_PATTERN=\"%s\"\n" "${FIND_PATTERN}"
+if [ ${N_ARG_SAVED} -eq 0 ] ; then 
+    printf "\nERROR: N_ARG_SAVED shoud not be zero!\n\n"
+    exit 1
 fi 
 
 #
+if [ "${FIND_PATTERN}" = "" ] ; then 
+    FIND_PATTERN="${ARG_SAVED[0]}" 
+fi  
+
+if [ ${b_DEBUG} -ne 0 ] ; then 
+    LOOP=0
+    printf "\n=================== dump saved argument ===========================\n"
+    echo -e "DEBUG-1: N_ARGV_SAVED=${N_ARG_SAVED}, entire ARG_SAVED=\"${ARG_SAVED[@]}\"\n"
+    while [ ${LOOP} -lt  ${N_ARG_SAVED} ] ; 
+    do  
+        printf "DEBUG-2: ARG_SAVED[%d]=\"%s\"\n" ${LOOP} "${ARG_SAVED[${LOOP}]}"      
+        LOOP=$((LOOP+1))
+    done
+    printf "====================================================================\n"
+    printf "DEBUG-3: FIND_PATTERN=\"%s\"\n\n" "${FIND_PATTERN}"
+fi 
+
+#
+LOOP=0
 name_patterns=()
-LOOP=1
 if [ "${FIND_PATTERN}" = "*" ] ; then 
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
@@ -456,17 +469,17 @@ if [ "${FIND_PATTERN}" = "*" ] ; then
 else 
     for pattern in ${FIND_PATTERN}
     do
+        LOOP=$((LOOP+1))
         if [ ${b_DEBUG} -ne 0 ] ; then 
             printf "### INFO-31: search files #%s: \"%s\"\n" "${LOOP}" "$pattern"
         fi 
         name_patterns+=(-o ${FIND_NAME} "${pattern}")
-        LOOP=$((LOOP+1))
     done
     name_patterns=("${name_patterns[@]:1}")
 fi 
 
 # ========================================================================================================================
-LOOP=1
+LOOP=0
 if [ -z "${ARG_SAVED[${LOOP}]}" ] ; then 
 #
 # no grep texts
@@ -492,6 +505,7 @@ else
 #
     while [ ! -z "${ARG_SAVED[${LOOP}]}" ] ;
     do
+      	LOOP=$((LOOP+1))
     	GREP_TEXT="${ARG_SAVED[${LOOP}]}"
     	if [ ${b_DEBUG} -ne 0 ] ; then 
     		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
@@ -518,7 +532,6 @@ else
 # if nothing found/matched, return is non-zero 
 # continue to next loop even if nothing matched 
     	fi 
-    	LOOP=$((LOOP+1))
     done
 fi
 
