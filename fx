@@ -95,22 +95,17 @@ function this_usage() {
 #
 # Note: cannot print string begin with "--", it's considered as option for printf
 # The -- is used to tell the program that whatever follows should not be interpreted as a command line option to printf.
-#  
+#  --fopt, -f
     ${EXE_DIR}/asc yellow
     printf " \"%sfopt|-f=-maxdepth 2\"" '--'
     ${EXE_DIR}/asc green 
     printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "-maxdepth 2" "FIND_OPT"   
-#
+# --ftype, -t
     ${EXE_DIR}/asc yellow
-    printf " \"--fpath|-fp=XXX\"" 
-    ${EXE_DIR}/asc green
-    printf " --> Search starts at XXX directory\n"     
-#
-    ${EXE_DIR}/asc yellow
-    printf " \"--ftype|-ft=l[,d]\"" 
+    printf " \"--ftype|-t=l[,d]\"" 
     ${EXE_DIR}/asc green
     printf " --> set find file type from default of \"%s\" to \"-type l\", and optionally \"-type d\" as well\n" "${FIND_TYPE}"
-    printf "\t\t --ftype without input deletes the option, \"find\" default searches all file types\n"
+    printf "\t\t --ftype without input deletes old options, \"find\" default searches all file types\n"
     printf "\t\t Valid find types are: "
     ${EXE_DIR}/asc yellow
 
@@ -134,7 +129,12 @@ function this_usage() {
     printf "\"%s\" comma" ","
     ${EXE_DIR}/asc green
     printf " to separate multiple options\n" "${FIND_TYPE_LIST}"
-#
+# --fpath, --fp
+    ${EXE_DIR}/asc yellow
+    printf " \"--fpath|-fp=XXX\"" 
+    ${EXE_DIR}/asc green
+    printf " --> Search starts at XXX directory\n"     
+# --fname
     ${EXE_DIR}/asc yellow
     printf " \"--fname|-fn=-iname\"" "-iname"
     ${EXE_DIR}/asc green
@@ -144,7 +144,7 @@ function this_usage() {
 #
     printf "%s\n" "${FIND_NAME_LIST}"
     ${EXE_DIR}/asc green
-#
+# --fhead, -fh
     ${EXE_DIR}/asc yellow
     printf ' \"%sfhead|-fh=%s\"' '--' '-P' 
     ${EXE_DIR}/asc green 
@@ -153,40 +153,46 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf "%s\n" "${FIND_HEAD_OPT_LIST}"
     ${EXE_DIR}/asc green
-#
+# --ftail, -ft
     ${EXE_DIR}/asc yellow
     printf ' \"%sftail|-ft=%s\"' '--' '-prune' 
     ${EXE_DIR}/asc green 
     printf " %s set \"%s\" (tail) option to %s, the last option of the command\n" ' -->' "${FIND_EXE}" "-prune"
     ${EXE_DIR}/asc green
-#
+# --gopt
     ${EXE_DIR}/asc yellow
     printf " \"%sgopt|-g=-w\"" '--'
     ${EXE_DIR}/asc green 
-    printf "%s> append option \"%s\" to env %s, used when calling grep command\n" ' -->' "-w" "GREP_OPT"   
-#
+    printf "%s append option \"%s\" to env %s, used when calling grep command\n" ' -->' "-w" "GREP_OPT"   
+# -g
     ${EXE_DIR}/asc yellow
     printf " \"-g -g=-Hw --color=auto\"" 
     ${EXE_DIR}/asc green 
-    printf "%s> first delete old grep options, then set new grep options to \"%s\"\n" ' -->' "-Hw --color=auto"    
-#
+    printf "%s first delete old grep options, then set new grep options to \"%s\"\n" ' -->' "-Hw --color=auto"    
+# --gexe, -ge
     ${EXE_DIR}/asc yellow
     printf " \"%sgexe|-ge=egrep\"" "--"
     ${EXE_DIR}/asc green 
-    printf "%s>  change default \"%s\" command to \"%s\"\n" ' -->' "${GREP_EXE}" "egrep"
-#
+    printf "%s  change default \"%s\" command to \"%s\"\n" ' -->' "${GREP_EXE}" "egrep"
+# --optend
     ${EXE_DIR}/asc yellow
     printf " \"%soptend\"" '--'
     ${EXE_DIR}/asc green 
-    printf "%s> indicate end of all options parsing, treat arguments followed as non-options arguments\n" ' -->' 
-#
+    printf "%s indicate end of all options parsing, treat arguments followed as non-options arguments\n" ' -->' 
+# -d
     ${EXE_DIR}/asc yellow
-    printf " \"%sd=n|%sdn\"" ' -' '-'
+    printf " \"-d=n|-dn\"" 
     ${EXE_DIR}/asc green 
-    printf "\t%s> short format of \"%s\" option for find command\n" ' -->' "-maxdepth n"    
-    printf "\t\t same as long format"
+    printf " %s find -maxdepth n, default n=1, Same as long option: " "-->"
     ${EXE_DIR}/asc cyan
-    printf " \"--fopt=maxdepth n\"\n" 
+    printf " \"-f=-maxdepth n\"\n" 
+# -s 
+    ${EXE_DIR}/asc yellow
+    printf " \"-s=n|-sn\"" 
+    ${EXE_DIR}/asc green 
+    printf " %s print n number of line(s) surrounding grep context, default n=1, Same as long option: "  "-->" 
+    ${EXE_DIR}/asc cyan
+    printf " \"-g=-An -Bn\"\n" 
 #
     ${EXE_DIR}/asc green 
     printf " Example 1:\n"
@@ -289,53 +295,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-3: restore --glob=%d\n" ${b_GLOB_restore}
             fi
-        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-ft" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
-                    printf "\nWARN-1: --ftype=\"\", find file type changed from \"%s\" to empty\n" "${FIND_TYPE}"
-                fi
-                FIND_TYPE=""
-            else
-                FIND_TYPE="-type ${OPT_STR_2}" 
-            fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-4: find type changed to: \"%s\"\n" "${FIND_TYPE}"
-            fi 
-        elif [ "${OPT_STR_1}" = "--fhead" -o "${OPT_STR_1}" = "-fh" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
-                    printf "\nWARN-2: --fhead=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
-                fi
-                FIND_HEAD_OPT=""
-            else
-                FIND_HEAD_OPT="${FIND_HEAD_OPT} ${OPT_STR_2}" 
-            fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-5: set \"%s\" (head) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
-            fi 
-        elif [ "${OPT_STR_1}" = "--ftail" -o "${OPT_STR_1}" = "-ft" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
-                    printf "\nWARN-2: --ftail=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
-                fi
-                FIND_TAIL_OPT=""
-            else
-                FIND_TAIL_OPT="${FIND_TAIL_OPT} ${OPT_STR_2}" 
-            fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-6: set \"%s\" (tail) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
-            fi 
-        elif [ "${OPT_STR_1}" = "--fname" -o "${OPT_STR_1}" = "-fn" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
-                    printf "\nERROR-OPT: --fname cannot be empty\n" 
-                fi
-            else
-                FIND_NAME="${OPT_STR_2}" 
-            fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-7: set find TEST name to: \"%s\"\n" "${FIND_NAME}"
-            fi 
+# --fopt, -f
         elif [ "${OPT_STR_1}" = "--fopt" -o "${OPT_STR_1}" = "-f" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -348,6 +308,70 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-8: set find options changed to: \"%s\"\n" "${FIND_OPT}"
             fi 
+# --ftype, -t
+        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-t" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nWARN-1: --ftype=\"\", find file type changed from \"%s\" to empty\n" "${FIND_TYPE}"
+                fi
+                FIND_TYPE=""
+            else
+                FIND_TYPE="-type ${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-4: find type changed to: \"%s\"\n" "${FIND_TYPE}"
+            fi
+# --fhead, -fh             
+        elif [ "${OPT_STR_1}" = "--fhead" -o "${OPT_STR_1}" = "-fh" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nWARN-2: --fhead=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
+                fi
+                FIND_HEAD_OPT=""
+            else
+                FIND_HEAD_OPT="${FIND_HEAD_OPT} ${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-5: set \"%s\" (head) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
+            fi
+# --ftail, -ft             
+        elif [ "${OPT_STR_1}" = "--ftail" -o "${OPT_STR_1}" = "-ft" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nWARN-2: --ftail=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
+                fi
+                FIND_TAIL_OPT=""
+            else
+                FIND_TAIL_OPT="${FIND_TAIL_OPT} ${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-6: set \"%s\" (tail) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
+            fi 
+# --fname, -fn
+        elif [ "${OPT_STR_1}" = "--fname" -o "${OPT_STR_1}" = "-fn" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nERROR-OPT: --fname cannot be empty\n" 
+                fi
+            else
+                FIND_NAME="${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-7: set find TEST name to: \"%s\"\n" "${FIND_NAME}"
+            fi 
+# --fpath, -fp
+        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-fp" ] ; then 
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-11: find starting path=%s\n" "${OPT_STR_1}"
+            fi 
+            if [ -d "${OPT_STR_2}" ] ; then 
+                FIND_PATH="${OPT_STR_2}"
+            else
+#                printf "\nERROR-1: option --fpath=%s directory \"%s\" does not exist!\n\n" "${OPT_STR_2}" "${OPT_STR_2}"
+#                exit 1
+                FIND_PATH="${OPT_STR_2}"
+            fi
+# --gopt, -g
         elif [ "${OPT_STR_1}" = "--gopt" -o "${OPT_STR_1}" = "-g" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -360,6 +384,7 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-9: set grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
+# --gexe, -ge
         elif [ "${OPT_STR_1}" = "--gexe" -o "${OPT_STR_1}" = "-ge" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -371,22 +396,24 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-10: set grep command to: \"%s\"\n" "${GREP_EXE}"
             fi 
-        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-fp" ] ; then 
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-11: find starting path=%s\n" "${OPT_STR_1}"
-            fi 
-            if [ -d "${OPT_STR_2}" ] ; then 
-                FIND_PATH="${OPT_STR_2}"
-            else
-#                printf "\nERROR-1: option --fpath=%s directory \"%s\" does not exist!\n\n" "${OPT_STR_2}" "${OPT_STR_2}"
-#                exit 1
-                FIND_PATH="${OPT_STR_2}"
-            fi 
+# --help -h             
         elif [ "${OPT_STR_1}" = "--help"  -o  "${OPT_STR_1}" = "-h" ] ; then 
             this_usage
             exit 1
+# -d
         elif [ "${OPT_STR_1}" = "-d" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+# default to 1 if number not specified 
+                OPT_STR_2="1"    
+            fi 
             FIND_OPT="-maxdepth ${OPT_STR_2} ${FIND_OPT}"       
+# -s
+        elif [ "${OPT_STR_1}" = "-s" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+# default to 1 if number not specified 
+                OPT_STR_2="1"    
+            fi 
+            GREP_OPT="-A${OPT_STR_2} -B${OPT_STR_2} ${GREP_OPT}"       
 #========================================================================================
         elif [ "${OPT_STR_1}" = "-bb" ] ; then 
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_BB}"
