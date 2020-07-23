@@ -501,6 +501,9 @@ if [ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ; then
 # need "\(" so that type is working for all ${FIND_NAME}("-name") not just the first one
 #
         if [ ${b_GLOB_restore} -ne 0 ] ; then  
+#
+# restore glob makes using starting path '*' possible
+#
             set +f
         fi 
         ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}
@@ -532,6 +535,9 @@ else
 # - using -print0 so filenames with "spaces" can be passed to grep correctly
 #
             if [ ${b_GLOB_restore} -ne 0 ] ; then  
+#
+# restore glob makes using starting path '*' possible
+#
                 set +f
             fi 
             ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
