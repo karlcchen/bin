@@ -30,8 +30,14 @@ b_DEBUG=0
 FIND_NAME="-name"
 #FIND_NAME="-iname"
 FIND_NAME_LIST="-name -iname -lname -ilname"
-#FIND_PATH='.'
+
+# NOTES: 
+# - if starting path is '.', maxdepth 1, search only current directory, maxdepth 0 found NOTHING   
+# - if starting path is '*', maxdepth 0, search only current directory 
+# FIND_PATH='.'
+# NOTE: maxdepth is one depth deeper if starting path is '.'
 FIND_PATH='*'
+
 FIND_TYPE="-type f"
 FIND_TYPE_LIST="f l d b c p s D"
 # default main option of find, must appeared before the first search path
