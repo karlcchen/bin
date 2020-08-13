@@ -462,6 +462,13 @@ do
     shift 1
 done
 
+while [ ! -z "$1" ] ; 
+do 
+    ARG_SAVED+=("$1")
+    N_ARG_SAVED=$((N_ARG_SAVED+1))
+    shift 1
+done 
+
 if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then 
     this_usage
     exit 1
