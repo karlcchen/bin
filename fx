@@ -166,7 +166,7 @@ function this_usage() {
     printf "%s append option \"%s\" to env %s, used when calling grep command\n" ' -->' "-w" "GREP_OPT"   
 # -g
     ${EXE_DIR}/asc yellow
-    printf " \"-g -g=-Hw --color=auto\"" 
+    printf " \"-g\" \"-g=-Hw --color=auto\"" 
     ${EXE_DIR}/asc green 
     printf "%s first delete old grep options, then set new grep options to \"%s\"\n" ' -->' "-Hw --color=auto"    
 # --gexe, -ge
@@ -382,7 +382,20 @@ do
                 GREP_OPT="${GREP_OPT} ${OPT_STR_2}" 
             fi
             if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-9: set grep options changed to: \"%s\"\n" "${GREP_OPT}"
+                printf "\nINFO-9: grep options changed to: \"%s\"\n" "${GREP_OPT}"
+            fi 
+# --newgopt, -ng
+        elif [ "${OPT_STR_1}" = "--newgopt" -o "${OPT_STR_1}" = "-ng" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                if [ ${b_DEBUG} -ne 0 ] ; then 
+                    printf "\nWARN-3: --newgopt=\"\", grep NEW options changed from \"%s\" to empty\n" "${GREP_OPT}"
+                fi
+                GREP_OPT=""
+            else
+                GREP_OPT="${OPT_STR_2}" 
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-9: grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
 # --gexe, -ge
         elif [ "${OPT_STR_1}" = "--gexe" -o "${OPT_STR_1}" = "-ge" ] ; then 
@@ -394,7 +407,7 @@ do
                 GREP_EXE="${OPT_STR_2}" 
             fi
             if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-10: set grep command to: \"%s\"\n" "${GREP_EXE}"
+                printf "\nINFO-10: grep exe command changed to: \"%s\"\n" "${GREP_EXE}"
             fi 
 # --help -h             
         elif [ "${OPT_STR_1}" = "--help"  -o  "${OPT_STR_1}" = "-h" ] ; then 

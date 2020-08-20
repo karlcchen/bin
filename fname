@@ -2,10 +2,12 @@
 #
 if [ ! -z "$2" ] ; 
 then 
-    FOUND_LIST=`find -L . -type f \( -name "$1" -o -name "$2" \)`
+#    FOUND_LIST=`find -L . -type f \( -name "$1" -o -name "$2" \)`
+    FOUND_LIST=`find . -type f \( -name "$1" -o -name "$2" \)`
 #	find . \( -name "$1" -o -name "$2" \) 
 else
-    FOUND_LIST=`find -L . -type f -name "$1"` 
+#    FOUND_LIST=`find -L . -type f -name "$1"` 
+    FOUND_LIST=`find . -type f -name "$1"` 
 #	find . -name "$1" 
 fi
 #
