@@ -1,18 +1,41 @@
 #!/bin/bash
 #
-if [ ! -z "$2" ] ; 
-then 
-#    FOUND_LIST=`find -L . -type f \( -name "$1" -o -name "$2" \)`
-    FOUND_LIST=`find . -type f \( -name "$1" -o -name "$2" \)`
-#	find . \( -name "$1" -o -name "$2" \) 
-else
-#    FOUND_LIST=`find -L . -type f -name "$1"` 
-    FOUND_LIST=`find . -type f -name "$1"` 
-#	find . -name "$1" 
+#CUR_DIR="$(pwd)"
+#CUR_DIR='.'
+CUR_DIR='*'
+
+b_DEBUG=0
+b_VERBOSE=0
+b_ABS_PATH=0
+if [ "$1" = "-a" ] ; then  
+    b_ABS_PATH=1
+    shift 1
+elif [ "$1" = "-r" ] ; then  
+    b_ABS_PATH=0
+    shift 1
+elif [ "$1" = "--verbose" ] ; then  
+    b_VERBOSE=1
+    shift 1
+elif [ "$1" = "--debug" ] ; then  
+    b_DEBUG=1
+    b_VERBOSE=1
+    shift 1
+fi 
+
+if [ ! -z "$2" ] ; then 
+    CUR_DIR="$2"
 fi
 #
+#    FOUND_LIST=`find -L . -type f -name "$1"` 
+    FOUND_LIST=`find ${CUR_DIR} -type f -name "$1"` 
+#	find . -name "$1" 
+
 if [ $? -eq 0 ] ; then 
     if [ "${FOUND_LIST}" != "" ] ; then 
-        echo "${FOUND_LIST}" | xargs realpath
+        if [ ${b_ABS_PATH} -ne 0 ] ; then  
+            echo "${FOUND_LIST}" | xargs realpath
+        else
+            echo "${FOUND_LIST}"
+        fi
     fi 
 fi
