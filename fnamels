@@ -1,11 +1,42 @@
 #!/bin/bash
-if [ ! -z "$2" ] ; 
-then 
-	find -L . -type f \( -name "$1" -o -name "$2" \) -ls
-#	find . -type f \( -name "$1" -o -name "$2" \) -ls
-#	find . \( -name "$1" -o -name "$2" \) -ls
-else
-	find -L . -type f -name "$1" -ls
-#	find . -type f -name "$1" -ls
-#	find . -name "$1" -ls
+#
+# fnamels
+#
+
+#CUR_DIR="$(pwd)"
+#CUR_DIR='.'
+CUR_DIR='*'
+
+b_DEBUG=0
+b_VERBOSE=0
+b_ABS_PATH=0
+if [ "$1" = "-a" ] ; then  
+    b_ABS_PATH=1
+    shift 1
+elif [ "$1" = "-r" ] ; then  
+    b_ABS_PATH=0
+    shift 1
+elif [ "$1" = "--verbose" -o  "$1" = "-v" ] ; then  
+    b_VERBOSE=1
+    shift 1
+elif [ "$1" = "--debug" ] ; then  
+    b_DEBUG=1
+    b_VERBOSE=1
+    shift 1
+fi 
+
+if [ ! -z "$2" ] ; then 
+    CUR_DIR="$2"
 fi
+
+if [ ${b_VERBOSE} -ne 0 ] ; then 
+    find ${CUR_DIR} -type f -name "$1" -ls | awk '{print $11}' | sort | xargs realpath | xargs ls -l
+    #find ${CUR_DIR} \! -type l -name "$1" -ls
+else
+    find ${CUR_DIR} -type f -name "$1" -ls | awk '{print $11}' | sort | xargs realpath 
+fi 
+
+# this will display file with no symbolic links 
+# find -L ${CUR_DIR} \! -type l -name "$1" -ls | awk '{print $11}' | xargs realpath | sort | uniq -u
+
+

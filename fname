@@ -3,17 +3,34 @@
 #CUR_DIR="$(pwd)"
 #CUR_DIR='.'
 CUR_DIR='*'
+FIND_OPT1=""
 
 b_DEBUG=0
 b_VERBOSE=0
 b_ABS_PATH=0
+b_LS_LONG=0
+b_NO_LINK=0
+b_FIND_LINK=0
 if [ "$1" = "-a" ] ; then  
     b_ABS_PATH=1
     shift 1
 elif [ "$1" = "-r" ] ; then  
     b_ABS_PATH=0
     shift 1
-elif [ "$1" = "--verbose" ] ; then  
+elif [ "$1" = "--nolink" -o  "$1" = "-nl" ] ; then  
+    b_NO_LINK=1
+    shift 1
+elif [ "$1" = "--findlink" -o  "$1" = "-L" ] ; then  
+    b_FIND_LINK=1
+    shift 1
+elif [ "$1" = "-Ll" -o  "$1" = "-lL" ] ; then  
+    b_FIND_LINK=1
+    b_LS_LONG=1
+    shift 1
+elif [ "$1" = "--long" -o  "$1" = "-l" ] ; then  
+    b_LS_LONG=1
+    shift 1
+elif [ "$1" = "--verbose" -o  "$1" = "-v" ] ; then  
     b_VERBOSE=1
     shift 1
 elif [ "$1" = "--debug" ] ; then  
@@ -25,17 +42,29 @@ fi
 if [ ! -z "$2" ] ; then 
     CUR_DIR="$2"
 fi
+
+if [ ${b_NO_LINK} -ne 0 ] ; then  
+    FIND_OPT1="-L"
+fi 
+if [ ${b_FIND_LINK} -ne 0 ] ; then  
+    FIND_OPT1="-L"
+fi 
+
 #
 #    FOUND_LIST=`find -L . -type f -name "$1"` 
-    FOUND_LIST=`find ${CUR_DIR} -type f -name "$1"` 
+    FOUND_LIST=`find ${FIND_OPT1} ${CUR_DIR} -type f -name "$1"` 
 #	find . -name "$1" 
 
 if [ $? -eq 0 ] ; then 
     if [ "${FOUND_LIST}" != "" ] ; then 
-        if [ ${b_ABS_PATH} -ne 0 ] ; then  
-            echo "${FOUND_LIST}" | xargs realpath
+        if [ ${b_NO_LINK} -ne 0 ] ; then  
+            echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
+        elif [ ${b_LS_LONG} -ne 0 ] ; then  
+            echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l
+        elif [ ${b_ABS_PATH} -ne 0 ] ; then  
+            echo "${FOUND_LIST}" | xargs realpath | sort
         else
-            echo "${FOUND_LIST}"
+            echo "${FOUND_LIST}" | sort
         fi
     fi 
 fi
