@@ -159,16 +159,21 @@ function this_usage() {
     ${EXE_DIR}/asc green 
     printf " %s set \"%s\" (tail) option to %s, the last option of the command\n" ' -->' "${FIND_EXE}" "-prune"
     ${EXE_DIR}/asc green
-# --gopt
+# --gopt, -g
     ${EXE_DIR}/asc yellow
-    printf " \"%sgopt|-g=-w\"" '--'
+    printf ' \"%sgopt|-g=-w\"' '--'
     ${EXE_DIR}/asc green 
-    printf "%s append option \"%s\" to env %s, used when calling grep command\n" ' -->' "-w" "GREP_OPT"   
-# -g
+    printf '%s append option \"-w" to env variable \"GREP_OPT\", used when calling grep command\n' ' -->' 
+# -g, how to delete old GREP_OPT and set new 
     ${EXE_DIR}/asc yellow
-    printf " \"-g\" \"-g=-Hw --color=auto\"" 
+    printf '\t Example: \"-g\" \"%s\"' "-g=-Hw --color=auto"
     ${EXE_DIR}/asc green 
-    printf "%s first delete old grep options, then set new grep options to \"%s\"\n" ' -->' "-Hw --color=auto"    
+    printf '%s delete old and set new GREP_OPT=\"%s\"\n' ' -->' "-Hw --color=auto"
+# --newgopt, -ng, quick way to set complete new GREP_OPT
+    ${EXE_DIR}/asc yellow
+    printf " \"%snewgopt|-ng=%s\"" '--' "-Hw --color=auto"
+    ${EXE_DIR}/asc green 
+    printf '%s directly overwrite new env variable GREP_OPT=\"%s"\n' ' -->' "-Hw --color=auto"
 # --gexe, -ge
     ${EXE_DIR}/asc yellow
     printf " \"%sgexe|-ge=egrep\"" "--"
