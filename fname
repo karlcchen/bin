@@ -50,9 +50,10 @@ if [ ${b_FIND_LINK} -ne 0 ] ; then
     FIND_OPT1="-L"
 fi 
 
+FIND_SPEC="`basename $1`"
 #
 #    FOUND_LIST=`find -L . -type f -name "$1"` 
-    FOUND_LIST=`find ${FIND_OPT1} ${CUR_DIR} -type f -name "$1"` 
+    FOUND_LIST=`find ${FIND_OPT1} ${CUR_DIR} -type f -name "${FIND_SPEC}"` 
 #	find . -name "$1" 
 
 if [ $? -eq 0 ] ; then 
