@@ -1,9 +1,27 @@
 #!/bin/bash
 #
+# fname 
+#
+# set -f
+
+s_VERSION="1.1"
+
 #CUR_DIR="$(pwd)"
-#CUR_DIR='.'
-CUR_DIR='*'
+CUR_DIR='.'
+#CUR_DIR='*'
 FIND_OPT1=""
+FIND_TYPE="f"
+
+EXE_NAME="`realpath $0`"
+EXE_BASE="`basename ${EXE_NAME}`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+
+function this_usage() {
+    ${EXE_DIR}/asc reset green 
+    printf '\n=== search filename: %s Version:%s\n' "${EXE_BASE}" "${s_VERSION}"
+    printf " Usage:\n\t %s\t search_name_patterns\n" "${EXE_BASE}"
+    ${EXE_DIR}/asc reset
+}
 
 b_DEBUG=0
 b_VERBOSE=0
@@ -11,36 +29,101 @@ b_ABS_PATH=0
 b_LS_LONG=0
 b_NO_LINK=0
 b_FIND_LINK=0
-if [ "$1" = "-a" ] ; then  
-    b_ABS_PATH=1
+N_ARG_SAVED=0
+OPT_CNT=1
+while [ ! -z "$1" ] 
+do 
+    if [ ${b_DEBUG} -ne 0 ] ; then 
+        printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
+    fi 
+#    echo "$1" | grep '^\-\-' >/dev/null
+    echo "$1" | grep '^\-' >/dev/null
+    if [ $? -eq 0 ] ; then  
+        # removed trailing spaces of OPT_STR_2
+        OPT_STR_1=`echo "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+        OPT_STR_2=""
+        echo "$1" | grep '=' >/dev/null
+        if [ $? -eq 0 ] ; then 
+            OPT_STR_2=`echo "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
+        else 
+            echo "$1" | grep "[[:digit:]]" >/dev/null
+            if [ $? -eq 0 ] ; then 
+                OPT_STR_1=`echo "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+                OPT_STR_2=`echo "$1" | sed 's/[^0-9]*//g'`
+            fi 
+        fi  
+        if [ ${b_DEBUG} -ne 0 ] ; then 
+            printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
+        fi 
+#
+        if [ "${OPT_STR_1}" = "--verbose" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+        	b_VERBOSE=1
+            else
+                b_VERBOSE=${OPT_STR_2}
+            fi
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-1: set --verbose=%d, --debug=%d\n" ${b_VERBOSE} ${b_DEBUG}
+            fi
+        elif [ "${OPT_STR_1}" = "--debug" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+        	b_DEBUG=1
+            else
+                b_DEBUG=${OPT_STR_2}
+            fi
+            b_VERBOSE=1
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
+            fi
+        elif [ "${OPT_STR_1}" = "-a" ] ; then  
+            b_ABS_PATH=1
+        elif [ "${OPT_STR_1}" = "--type" -o "${OPT_STR_1}" = "-t" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                FIND_TYPE="${OPT_STR_2}"     
+            fi
+        elif [ "${OPT_STR_1}" = "-r" ] ; then  
+            b_ABS_PATH=0
+        elif [ "${OPT_STR_1}" = "--nolink" -o  "${OPT_STR_1}" = "-nl" ] ; then  
+            b_NO_LINK=1
+        elif [ "${OPT_STR_1}" = "--findlink" -o  "${OPT_STR_1}" = "-L" ] ; then  
+            b_FIND_LINK=1
+        elif [ "${OPT_STR_1}" = "-Ll" -o  "${OPT_STR_1}" = "-lL" ] ; then  
+            b_FIND_LINK=1
+            b_LS_LONG=1
+        elif [ "${OPT_STR_1}" = "--long" -o  "${OPT_STR_1}" = "-l" ] ; then  
+            b_LS_LONG=1
+        #==============================================================================
+        elif [ "${OPT_STR_1}" = "--optend" ] ; then 
+#
+# no more options and skip this option 
+#
+            shift 1
+            break 
+        else
+#
+# anything don't know treat it as real argument
+#
+            ARG_SAVED+=("$1")
+            N_ARG_SAVED=$((N_ARG_SAVED+1))
+        fi
+    else
+        ARG_SAVED+=("$1")
+        N_ARG_SAVED=$((N_ARG_SAVED+1))
+    fi
+    OPT_CNT=$((OPT_CNT+1))
     shift 1
-elif [ "$1" = "-r" ] ; then  
-    b_ABS_PATH=0
-    shift 1
-elif [ "$1" = "--nolink" -o  "$1" = "-nl" ] ; then  
-    b_NO_LINK=1
-    shift 1
-elif [ "$1" = "--findlink" -o  "$1" = "-L" ] ; then  
-    b_FIND_LINK=1
-    shift 1
-elif [ "$1" = "-Ll" -o  "$1" = "-lL" ] ; then  
-    b_FIND_LINK=1
-    b_LS_LONG=1
-    shift 1
-elif [ "$1" = "--long" -o  "$1" = "-l" ] ; then  
-    b_LS_LONG=1
-    shift 1
-elif [ "$1" = "--verbose" -o  "$1" = "-v" ] ; then  
-    b_VERBOSE=1
-    shift 1
-elif [ "$1" = "--debug" ] ; then  
-    b_DEBUG=1
-    b_VERBOSE=1
-    shift 1
-fi 
+done 
 
-if [ ! -z "$2" ] ; then 
-    CUR_DIR="$2"
+while [ ! -z "$1" ] ; 
+do 
+    ARG_SAVED+=("$1")
+    N_ARG_SAVED=$((N_ARG_SAVED+1))
+    shift 1
+done 
+
+if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then 
+    this_usage
+    exit 1
 fi
 
 if [ ${b_NO_LINK} -ne 0 ] ; then  
@@ -50,13 +133,22 @@ if [ ${b_FIND_LINK} -ne 0 ] ; then
     FIND_OPT1="-L"
 fi 
 
-FIND_SPEC="`basename $1`"
-#
-#    FOUND_LIST=`find -L . -type f -name "$1"` 
-    FOUND_LIST=`find ${FIND_OPT1} ${CUR_DIR} -type f -name "${FIND_SPEC}"` 
-#	find . -name "$1" 
+#FIND_SPEC="`basename ${ARG_SAVED[0]}`"
+FIND_SPEC="${ARG_SAVED[@]}"
+# set +f
+if [ ${b_VERBOSE} -ne 0 ] ; then 
+    echo "FIND_SPEC=${FIND_SPEC}"
+    echo "FIND_TYPE=${FIND_TYPE}"
+fi
 
+FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} -type ${FIND_TYPE} -name "${FIND_SPEC}"`" 
+#FOUND_LIST=`find . -type f -name '*.sh'` 
 if [ $? -eq 0 ] ; then 
+    if [ ${b_VERBOSE} -ne 0 ] ; then 
+        echo -e "\n=== start of list ==="
+        echo "FOUND_LIST=\"${FOUND_LIST}\""
+        echo -e "=== end of list ===\n"
+    fi 
     if [ "${FOUND_LIST}" != "" ] ; then 
         if [ ${b_NO_LINK} -ne 0 ] ; then  
             echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
