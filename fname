@@ -2,13 +2,12 @@
 #
 # fname 
 #
-# set -f
 
-s_VERSION="1.1"
+s_VERSION="1.2"
 
 #CUR_DIR="$(pwd)"
-CUR_DIR='.'
-#CUR_DIR='*'
+#CUR_DIR='.'
+CUR_DIR='*'
 FIND_OPT1=""
 FIND_TYPE="f"
 
@@ -19,7 +18,16 @@ EXE_DIR="`dirname ${EXE_NAME}`"
 function this_usage() {
     ${EXE_DIR}/asc reset green 
     printf '\n=== search filename: %s Version:%s\n' "${EXE_BASE}" "${s_VERSION}"
-    printf " Usage:\n\t %s\t search_name_patterns\n" "${EXE_BASE}"
+    printf " Usage:\n\t %s\t [options] search_name_patterns\n" "${EXE_BASE}"
+    printf 'options:\n'
+    printf ' --findtype | -t: specify find type\n'
+    printf '\t Example search type: file and directory: \"-t=f,d\"\n'
+    printf ' --findopt | -o: specify find option, this option is placed before the (starting) path parameter\n'
+    printf '\t Example: -o=-L\n'
+    printf ' --nolink   | -nl: do not print files that has symbolic link\n'
+    printf ' --findlink | -L: print files with their symbolic link, if any\n'
+    printf '\t the same as using \"--findopt=-L\" OR \"-o=-L\"\n'
+    printf ' --Ll | -lL: \"--findlink\" option plus long (ls) format output\n'
     ${EXE_DIR}/asc reset
 }
 
@@ -75,21 +83,31 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
-        elif [ "${OPT_STR_1}" = "-a" ] ; then  
-            b_ABS_PATH=1
         elif [ "${OPT_STR_1}" = "--type" -o "${OPT_STR_1}" = "-t" ] ; then  
             if [ ! -z "${OPT_STR_2}" ] ; then 
-                FIND_TYPE="${OPT_STR_2}"     
+                FIND_TYPE="${OPT_STR_2}"
             fi
-        elif [ "${OPT_STR_1}" = "-r" ] ; then  
+        elif [ "${OPT_STR_1}" = "--curdir" -o "${OPT_STR_1}" = "-c" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                CUR_DIR="${OPT_STR_2}"
+            fi        
+        elif [ "${OPT_STR_1}" = "--apath" -o "${OPT_STR_1}" = "-a" ] ; then  
+            b_ABS_PATH=1
+        elif [ "${OPT_STR_1}" = "--rpath" -o "${OPT_STR_1}" = "-r" ] ; then  
             b_ABS_PATH=0
         elif [ "${OPT_STR_1}" = "--nolink" -o  "${OPT_STR_1}" = "-nl" ] ; then  
             b_NO_LINK=1
         elif [ "${OPT_STR_1}" = "--findlink" -o  "${OPT_STR_1}" = "-L" ] ; then  
             b_FIND_LINK=1
+            FIND_OPT1="-L"
+        elif [ "${OPT_STR_1}" = "--findopt" -o  "${OPT_STR_1}" = "-o" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                FIND_OPT1="${OPT_STR_2}"
+            fi
         elif [ "${OPT_STR_1}" = "-Ll" -o  "${OPT_STR_1}" = "-lL" ] ; then  
             b_FIND_LINK=1
             b_LS_LONG=1
+            FIND_OPT1="-L"
         elif [ "${OPT_STR_1}" = "--long" -o  "${OPT_STR_1}" = "-l" ] ; then  
             b_LS_LONG=1
         #==============================================================================
@@ -126,22 +144,21 @@ if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then
     exit 1
 fi
 
-if [ ${b_NO_LINK} -ne 0 ] ; then  
-    FIND_OPT1="-L"
-fi 
-if [ ${b_FIND_LINK} -ne 0 ] ; then  
-    FIND_OPT1="-L"
-fi 
-
-#FIND_SPEC="`basename ${ARG_SAVED[0]}`"
 FIND_SPEC="${ARG_SAVED[@]}"
-# set +f
+FIND_SPEC_BASENAME="`basename ${ARG_SAVED[0]}`"
+FIND_SPEC_DIRNAME="`dirname ${ARG_SAVED[0]}`"
 if [ ${b_VERBOSE} -ne 0 ] ; then 
     echo "FIND_SPEC=${FIND_SPEC}"
+    echo "FIND_SPEC_BASENAME=${FIND_SPEC_BASENAME}"
+    echo "FIND_SPEC_DIRNAME=${FIND_SPEC_DIRNAME}"
     echo "FIND_TYPE=${FIND_TYPE}"
+    echo "FIND_OPT1=${FIND_OPT1}"
+    echo "CUR_DIR=${CUR_DIR}"
+    echo "b_NO_LINK=${b_NO_LINK}"
+    echo "b_FIND_LINK=${b_FIND_LINK}"
 fi
 
-FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} -type ${FIND_TYPE} -name "${FIND_SPEC}"`" 
+FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} -type ${FIND_TYPE} -name "${FIND_SPEC_BASENAME}"`" 
 #FOUND_LIST=`find . -type f -name '*.sh'` 
 if [ $? -eq 0 ] ; then 
     if [ ${b_VERBOSE} -ne 0 ] ; then 
@@ -151,6 +168,9 @@ if [ $? -eq 0 ] ; then
     fi 
     if [ "${FOUND_LIST}" != "" ] ; then 
         if [ ${b_NO_LINK} -ne 0 ] ; then  
+#
+# print files that has NO symbolic links
+#
             echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
         elif [ ${b_LS_LONG} -ne 0 ] ; then  
             echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l
