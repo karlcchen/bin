@@ -9,7 +9,11 @@ s_VERSION="1.2"
 #CUR_DIR='.'
 CUR_DIR='*'
 FIND_OPT1=""
+FIND_OPT2=""
 FIND_TYPE="f"
+FIND_OPT_GLOBAL=""
+FIND_TEST_NOT=""
+NAME_CASE="-name"
 
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
@@ -22,7 +26,8 @@ function this_usage() {
     printf 'options:\n'
     printf ' --findtype | -t: specify find type\n'
     printf '\t Example search type: file and directory: \"-t=f,d\"\n'
-    printf ' --findopt | -o: specify find option, this option is placed before the (starting) path parameter\n'
+    printf ' --findopt | -o: specify find option, these options are placed before the (starting) path parameter\n'
+    printf '\t Valid options are: -H, -L, -P, -P is the default behavior\n'
     printf '\t Example: -o=-L\n'
     printf ' --nolink   | -nl: do not print files that has symbolic link\n'
     printf ' --findlink | -L: print files with their symbolic link, if any\n'
@@ -44,20 +49,22 @@ do
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
     fi 
+# use "echo" failed if "$1" equals echo's options such as: "-n", etc...
 #    echo "$1" | grep '^\-\-' >/dev/null
-    echo "$1" | grep '^\-' >/dev/null
+    printf '%s\n' "$1" | grep '^\-' >/dev/null
     if [ $? -eq 0 ] ; then  
         # removed trailing spaces of OPT_STR_2
-        OPT_STR_1=`echo "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+        OPT_STR_1=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
         OPT_STR_2=""
-        echo "$1" | grep '=' >/dev/null
+#        echo "$1" | grep '=' >/dev/null
+        printf '%s\n' "$1"  | grep '=' >/dev/null
         if [ $? -eq 0 ] ; then 
-            OPT_STR_2=`echo "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
+            OPT_STR_2=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
         else 
             echo "$1" | grep "[[:digit:]]" >/dev/null
             if [ $? -eq 0 ] ; then 
-                OPT_STR_1=`echo "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
-                OPT_STR_2=`echo "$1" | sed 's/[^0-9]*//g'`
+                OPT_STR_1=`printf '%s\n' "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
+                OPT_STR_2=`printf '%s\n' "$1" | sed 's/[^0-9]*//g'`
             fi 
         fi  
         if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -87,6 +94,10 @@ do
             if [ ! -z "${OPT_STR_2}" ] ; then 
                 FIND_TYPE="${OPT_STR_2}"
             fi
+        elif [ "${OPT_STR_1}" = "--type" -o "${OPT_STR_1}" = "-t" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                FIND_TYPE="${OPT_STR_2}"
+            fi
         elif [ "${OPT_STR_1}" = "--curdir" -o "${OPT_STR_1}" = "-c" ] ; then  
             if [ ! -z "${OPT_STR_2}" ] ; then 
                 CUR_DIR="${OPT_STR_2}"
@@ -95,14 +106,36 @@ do
             b_ABS_PATH=1
         elif [ "${OPT_STR_1}" = "--rpath" -o "${OPT_STR_1}" = "-r" ] ; then  
             b_ABS_PATH=0
-        elif [ "${OPT_STR_1}" = "--nolink" -o  "${OPT_STR_1}" = "-nl" ] ; then  
+        elif [ "${OPT_STR_1}" = "-d" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                FIND_OPT_GLOBAL="${FIND_OPT_GLOBAL} -maxdepth ${OPT_STR_2}"
+            fi
+        elif [ "${OPT_STR_1}" = "--nolink" -o "${OPT_STR_1}" = "-nl" ] ; then  
             b_NO_LINK=1
+        elif [ "${OPT_STR_1}" = "--not" -o "${OPT_STR_1}" = "-n" ] ; then  
+            FIND_TEST_NOT="-not"
+# --fname=-iname,-lname,-ilname
+        elif [ "${OPT_STR_1}" = "--fname" ] ; then 
+            if [ -z "${OPT_STR_2}" ] ; then 
+                printf '\nERROR-1: option %s cannot be empty!\n' "${OPT_STR_1}"
+                exit 1
+            fi 
+            FIND_NAME="${OPT_STR_2}"
+            if [ ${b_DEBUG} -ne 0 ] ; then 
+                printf "\nINFO-7a: option %s: set find TEST name to: \"%s\"\n" "${OPT_STR_1}" "${FIND_NAME}"
+            fi 
+        elif [ "${OPT_STR_1}" = "--ignorecase" -o  "${OPT_STR_1}" = "-i" ] ; then  
+            NAME_CASE="-iname"
         elif [ "${OPT_STR_1}" = "--findlink" -o  "${OPT_STR_1}" = "-L" ] ; then  
             b_FIND_LINK=1
             FIND_OPT1="-L"
         elif [ "${OPT_STR_1}" = "--findopt" -o  "${OPT_STR_1}" = "-o" ] ; then  
             if [ ! -z "${OPT_STR_2}" ] ; then 
                 FIND_OPT1="${OPT_STR_2}"
+            fi
+        elif [ "${OPT_STR_1}" = "--gopt1" -o  "${OPT_STR_1}" = "-g" ] ; then  
+            if [ ! -z "${OPT_STR_2}" ] ; then 
+                FIND_OPT_GLOBAL="${FIND_OPT_GLOBAL} ${OPT_STR_2}"
             fi
         elif [ "${OPT_STR_1}" = "-Ll" -o  "${OPT_STR_1}" = "-lL" ] ; then  
             b_FIND_LINK=1
@@ -153,31 +186,40 @@ if [ ${b_VERBOSE} -ne 0 ] ; then
     echo "FIND_SPEC_DIRNAME=${FIND_SPEC_DIRNAME}"
     echo "FIND_TYPE=${FIND_TYPE}"
     echo "FIND_OPT1=${FIND_OPT1}"
+    echo "FIND_OPT_GLOBAL=${FIND_OPT_GLOBAL}"
+    echo "FIND_TEST_NOT=${FIND_TEST_NOT}"
     echo "CUR_DIR=${CUR_DIR}"
     echo "b_NO_LINK=${b_NO_LINK}"
     echo "b_FIND_LINK=${b_FIND_LINK}"
 fi
 
-FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} -type ${FIND_TYPE} -name "${FIND_SPEC_BASENAME}"`" 
-#FOUND_LIST=`find . -type f -name '*.sh'` 
-if [ $? -eq 0 ] ; then 
-    if [ ${b_VERBOSE} -ne 0 ] ; then 
-        echo -e "\n=== start of list ==="
-        echo "FOUND_LIST=\"${FOUND_LIST}\""
-        echo -e "=== end of list ===\n"
-    fi 
-    if [ "${FOUND_LIST}" != "" ] ; then 
-        if [ ${b_NO_LINK} -ne 0 ] ; then  
-#
-# print files that has NO symbolic links
-#
-            echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
-        elif [ ${b_LS_LONG} -ne 0 ] ; then  
-            echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l
-        elif [ ${b_ABS_PATH} -ne 0 ] ; then  
-            echo "${FOUND_LIST}" | xargs realpath | sort
-        else
-            echo "${FOUND_LIST}" | sort
-        fi
-    fi 
+if [ ${b_VERBOSE} -ne 0 ] ; then 
+    echo
+    echo "find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}" 
+    echo
+    exit 1
+else
+    FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
+    #FOUND_LIST=`find . -type f -name '*.sh'` 
+    if [ $? -eq 0 ] ; then 
+        if [ ${b_VERBOSE} -ne 0 ] ; then 
+            echo -e "\n=== start of list ==="
+            echo "FOUND_LIST=\"${FOUND_LIST}\""
+            echo -e "=== end of list ===\n"
+        fi 
+        if [ "${FOUND_LIST}" != "" ] ; then 
+            if [ ${b_NO_LINK} -ne 0 ] ; then  
+    #
+    # print files that has NO symbolic links
+    #
+                echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
+            elif [ ${b_LS_LONG} -ne 0 ] ; then  
+                echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l
+            elif [ ${b_ABS_PATH} -ne 0 ] ; then  
+                echo "${FOUND_LIST}" | xargs realpath | sort
+            else
+                echo "${FOUND_LIST}" | sort
+            fi
+        fi 
+    fi
 fi
