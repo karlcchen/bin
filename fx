@@ -34,7 +34,7 @@ FIND_NAME_LIST="-name -iname -lname -ilname"
 # NOTES: 
 # - if starting path is '.', maxdepth 1, search only current directory, maxdepth 0 found NOTHING   
 # - if starting path is '*', maxdepth 0, search only current directory 
-# FIND_PATH='.'
+# FIND_PATH='.' 
 # NOTE: maxdepth is one depth deeper if starting path is '.'
 FIND_PATH='*'
 
@@ -44,8 +44,14 @@ FIND_TYPE_LIST="f l d b c p s D"
 # default is "-P", other options are : -L -H -Olevel
 FIND_HEAD_OPT=""
 FIND_HEAD_OPT_LIST="-H -L -P"
-FIND_TAIL_OPT="-prune"
 FIND_TEST_NOT=""
+
+#FIND_TAIL_OPT="-prune"
+FIND_TAIL_OPT=""
+
+b_find_exclude_git=1
+FIND_EXCLUDE_DIRS="-not -path '*/.git*'"
+#FIND_EXCLUDE_DIRS=""
 
 XARGS_OPT=""
 ARG_SAVED=()
@@ -103,11 +109,11 @@ function this_usage() {
     printf "%s append option \"%s\" to env %s, used when calling find command\n" ' -->' "-maxdepth 2" "FIND_OPT"   
 # --ftype, -t
     ${EXE_DIR}/asc yellow
-    printf " \"--ftype|-t=l[,d]\"" 
+    printf ' \"--ftype|-t=l[,d]\"' 
     ${EXE_DIR}/asc green
-    printf " --> set find file type from default of \"%s\" to \"-type l\", and optionally \"-type d\" as well\n" "${FIND_TYPE}"
-    printf "\t\t --ftype without input deletes old options, \"find\" default searches all file types\n"
-    printf "\t\t Valid find types are: "
+    printf ' --> set NEW find file type to \"-type l\", and optionally \"-type d\" as well\n' 
+    printf '\t\t default searches type is \"%s\"\n' "${FIND_TYPE}"
+    printf '\t\t Valid find types are: '
     ${EXE_DIR}/asc yellow
 
 #
@@ -160,6 +166,16 @@ function this_usage() {
     ${EXE_DIR}/asc green 
     printf " %s set \"%s\" (tail) option to %s, the last option of the command\n" ' -->' "${FIND_EXE}" "-prune"
     ${EXE_DIR}/asc green
+# --findall, -a
+    ${EXE_DIR}/asc yellow
+    printf ' \"%sfindall|-a\"' '--'
+    ${EXE_DIR}/asc green 
+    printf '%s do not exclude searching ".git* directories", search (all) without restriction\n' ' -->' 
+    printf '\t\t default find use option: ' 
+    ${EXE_DIR}/asc yellow
+    printf '%s' "${FIND_EXCLUDE_DIRS}"
+    ${EXE_DIR}/asc green
+    printf ' to exclude searching git directories\n' 
 # --gopt, -g
     ${EXE_DIR}/asc yellow
     printf ' \"%sgopt|-g=-w\"' '--'
@@ -297,6 +313,9 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
+        elif [ "${OPT_STR_1}" = "--findall" -o "${OPT_STR_1}" = "-a" ] ; then 
+# -a
+            b_find_exclude_git=0
         elif [ "${OPT_STR_1}" = "--glob" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
             # default always restore glob before running find 
@@ -570,7 +589,7 @@ if [ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ; then
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}" 
         ${EXE_DIR}/asc reset yellow
-        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT}\n" 
+        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_EXCLUDE_DIRS} ${FIND_TAIL_OPT}\n" 
         ${EXE_DIR}/asc reset 
     else
 #
@@ -582,8 +601,14 @@ if [ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ; then
 #
             set +f
         fi 
-        ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}
+        if [ ${b_find_exclude_git} -ne 0 ] ; then 
+            ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT}
+        else
+            ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}
+#        ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT}
+#        find  *  -type f  \( -name index \) -not -path '*/.git*'
 # if nothing found/matched, return is non-zero 
+fi
     fi
 else 
 #
@@ -595,7 +620,7 @@ else
     	if [ ${b_DEBUG} -ne 0 ] ; then 
     		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
                 ${EXE_DIR}/asc reset yellow
-    		echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
+    		echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_EXCLUDE_DIRS} ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
                 ${EXE_DIR}/asc reset 
     	else 
 #
@@ -616,7 +641,11 @@ else
 #
                 set +f
             fi 
-            ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
+            if [ ${b_find_exclude_git} -ne 0 ] ; then 
+                ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
+            else
+                ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
+            fi
 # if nothing found/matched, return is non-zero 
 # continue to next loop even if nothing matched 
     	fi 
