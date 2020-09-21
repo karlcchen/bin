@@ -295,6 +295,7 @@ do
             printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
         if [ "${OPT_STR_1}" = "--verbose" ] ; then 
+# --verbose
             if [ -z "${OPT_STR_2}" ] ; then 
         	b_VERBOSE=1
             else
@@ -304,6 +305,7 @@ do
                 printf "\nINFO-1: set --verbose=%d, --debug=%d\n" ${b_VERBOSE} ${b_DEBUG}
             fi
         elif [ "${OPT_STR_1}" = "--debug" ] ; then 
+# --debug
             if [ -z "${OPT_STR_2}" ] ; then 
         	b_DEBUG=1
             else
@@ -314,7 +316,7 @@ do
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
         elif [ "${OPT_STR_1}" = "--findall" -o "${OPT_STR_1}" = "-a" ] ; then 
-# -a
+# --findsall, -a
             b_find_exclude_git=0
         elif [ "${OPT_STR_1}" = "--glob" ] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
