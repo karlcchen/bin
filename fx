@@ -58,7 +58,7 @@ ARG_SAVED=()
 
 # predefined wildcards for find -name patterns
 FIND_PATTERN_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
-FIND_PATTERN_MK='make* Make* *.mk *.mak GNUmake*' 
+FIND_PATTERN_MK='make* *Make* *.mk *.mak GNUmake*' 
 FIND_PATTERN_CH="*.c *.h *.S"
 #FIND_PATTERN_CH="*.c *.h"
 FIND_PATTERN_CCH="${FIND_PATTERN_CH} *.cc *.cpp *.cxx *.hpp"
