@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# bbcc 
+#
+if [ "$1" = "" ] ; then 
+    printf 'ERROR-1: first input, bitbake do_action not found!\n'
+    exit 1
+fi 
+
+bitbake -f -c clean $1
+bitbake -f -c compile $1 2>&1 | tee $1-compile.log
+
+if [ ! "$2" = "" ] ; then 
+    bblog $1 "$2"
+fi 

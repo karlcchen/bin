@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# bbc 
+#
+
+if [ "$1" = "" ] ; then 
+    printf 'ERROR-1: bitbake recipe name not found!\n'
+    exit 1
+fi 
+BB_NAME="$1"
+
+shift 1
+
+if [ "$1" = "" ] ; then 
+    printf 'ERROR-2: bitbake do_action not found!\n'
+    exit 2
+fi 
+
+while [ ! "$1" = "" ] ; 
+do 
+    BB_ACTION="$1"
+    printf '\n=== INFO: bitbake -f -c %s %s ===\n' "${BB_ACTION}" "${BB_NAME}"
+    bitbake -f -c ${BB_ACTION} ${BB_NAME} 2>&1 | tee ${BB_NAME}-${BB_ACTION}.log
+    if [ $? -ne 0 ] ; then 
+        printf 'ERROR-9: bitbake -f -c %s %s failed!\n' "${BB_ACTION}" "${BB_NAME}"
+        exit 9 
+    fi 
+    shift 1
+done

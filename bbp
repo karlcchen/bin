@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# bbp
+#
+
+WORK_PATH="build_output/work/aarch64-soniccorex-linux"
+
+if [ "$1" = "" ] ; then 
+	if [ -d "${WORK_PATH}" ] ; then 
+		ls -ltr ${WORK_PATH}
+	else
+		printf 'ERROR-1: path does not eixst: %s\n'  "${WORK_PATH}"
+		exit 1 
+	fi 
+else 
+	if [ -d "${WORK_PATH}/$1" ] ; then 
+		ls -ltr ${WORK_PATH}/$1
+	else
+		printf 'ERROR-2: path does not eixst: %s\n'  "${WORK_PATH}/$1"
+		exit 2
+	fi 
+fi 
