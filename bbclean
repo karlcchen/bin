@@ -17,8 +17,8 @@ do
         printf '\nERROR-2: \"bitbake -f -c clean %s\" failed!\n' "$1"
         exit 2
     fi 
-    pushd .
     if [ -d "${WORK_PATH}/$1" ] ; then 
+        pushd .
         cd ${WORK_PATH}/$1
         if [ $? -ne 0 ] ; then 
             printf '\nERROR-3: \"cd %s\" failed!\n' "${WORK_PATH}/$1"
@@ -30,11 +30,10 @@ do
             printf 'INFO-3:\n%s\n' "${LS_RESULT}"
             exit 4
         fi       
+        popd 
     else
-            printf '\nERROR-5: Folder %s not found!\n' "${WORK_PATH}/$1"
-            exit 5
+            printf '\nWARNING-5: Folder %s not found!\n' "${WORK_PATH}/$1"
     fi 
-    popd 
     shift 1
 done
 

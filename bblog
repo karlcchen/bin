@@ -3,38 +3,50 @@
 # bblog 
 #
 
+PRINT_ABS_PATH=0 
 WORK_PATH="build_output/work/aarch64-soniccorex-linux"
 
 if [ ! -d "${WORK_PATH}" ] ; then 
-    printf 'ERROR-1: base work path %s not found!\n' "${WORK_PATH}"
+    printf '\nERROR-1: base work path %s not found!\n' "${WORK_PATH}"
     exit 1
 else 
     cd ${WORK_PATH}
 fi 
 
 if [ "$1" = "" ] ; then 
-    printf 'ERROR-2: no input for recipe work path!\n' 
+    printf '\nERROR-2: no input for recipe work path!\n' 
     printf '=== TAIL of start of work path: \"%s\"\n' "${WORK_PATH}"
     ls -ltr | tail 
     exit 2   
 fi 
 
 if [ ! -d "$1" ] ; then 
-    printf 'ERROR-3: work path %s not found! PWD=%s\n' "${1}" "$(pwd)"
+    printf '\nERROR-3: work path %s not found! PWD=%s\n' "${1}" "$(pwd)"
     exit 3
 else 
     cd $1
 fi 
 
 LOG_PATH=`fx -t=d temp` 
+N_DIR_FOUND="`echo ${LOG_PATH} | wc -l`"
+if [ ${N_DIR_FOUND} -ne 1 ] ; then 
+    printf '\nERROR-5: number of Dir \"%s\" found is not 1\n' "${LOG_DIR_NAME}"
+    exit 5
+fi 
 if [ "${LOG_PATH}" = "" ] ; then 
 	printf 'ERROR-4: log file path not found!\n'
         exit 4 
 else 
 	if [ "$2" = "" ] ; then 
-		printf 'ERROR-5: not input search string!\n' 
-                exit 5
+		printf '\nERROR-6: not input search string!\n' 
+                exit 6
 	else 
-		fx -fp=${LOG_PATH} -all "$2"
+            printf '\n grep search \"%s\", Working path= \"%s\"\n' "$(pwd)" "$2"
+            if [ ${PRINT_ABS_PATH} -ne 0 ] ; then  
+                START_LOG_PATH="`realpath ${LOG_PATH}`"
+            else
+                START_LOG_PATH="${LOG_PATH}"
+            fi 
+            fx -fp=${START_LOG_PATH} -all "$2"
 	fi
 fi
