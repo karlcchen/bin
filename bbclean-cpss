@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# bbclean-cpss
+#
+
+bbclean marvell-cpss marvell-cpss-appdemo snwl-swinitlib-cpss snwl-diag-swinit snwl-app-demo

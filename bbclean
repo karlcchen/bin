@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# bbclean
+#
+
+WORK_PATH="build_output/work/aarch64-soniccorex-linux"
+
+if [ "$1" = "" ] ; then 
+    printf 'ERROR-1: first input, bitbake do_action not found!\n'
+    exit 1
+fi 
+
+while [ ! "$1" = "" ] ; 
+do 
+    bitbake -f -c clean $1
+    if [ $? -ne 0 ] ; then 
+        printf '\nERROR-2: \"bitbake -f -c clean %s\" failed!\n' "$1"
+        exit 2
+    fi 
+    pushd .
+    if [ -d "${WORK_PATH}/$1" ] ; then 
+        cd ${WORK_PATH}/$1
+        if [ $? -ne 0 ] ; then 
+            printf '\nERROR-3: \"cd %s\" failed!\n' "${WORK_PATH}/$1"
+            exit 3
+        fi 
+        LS_RESULT="`ls -l`"
+        if [ ! "${LS_RESULT}" = "total 0" ] ; then 
+            printf '\nERROR-4: folder %s not cleaned\n' "${WORK_PATH}/$1"
+            printf 'INFO-3:\n%s\n' "${LS_RESULT}"
+            exit 4
+        fi       
+    else
+            printf '\nERROR-5: Folder %s not found!\n' "${WORK_PATH}/$1"
+            exit 5
+    fi 
+    popd 
+    shift 1
+done
+

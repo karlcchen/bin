@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# bbcompile
+#
+
+WORK_PATH="build_output/work/aarch64-soniccorex-linux"
+
+if [ "$1" = "" ] ; then 
+    printf 'ERROR-1: first input, bitbake do_action not found!\n'
+    exit 1
+fi 
+
+while [ ! "$1" = "" ] ; 
+do 
+    bitbake -f -c compile $1
+    if [ $? -ne 0 ] ; then 
+        printf '\nERROR-2: \"bitbake -f -c compile %s\" failed!\n' "$1"
+        exit 2
+    fi 
+    shift 1
+done
+
