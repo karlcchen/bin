@@ -41,7 +41,15 @@ else
 		printf '\nERROR-6: not input search string!\n' 
                 exit 6
 	else 
-            printf '\n grep search \"%s\", Working path= \"%s\"\n' "$(pwd)" "$2"
+            printf '\n grep path='
+            asc magenta
+            printf %s "$(pwd)" 
+            asc reset
+            printf ', grep pattern='
+            asc magenta
+            printf '\"%s\"\n' "$2"
+            printf '\n' 
+            asc reset 
             if [ ${PRINT_ABS_PATH} -ne 0 ] ; then  
                 START_LOG_PATH="`realpath ${LOG_PATH}`"
             else
