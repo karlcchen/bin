@@ -7,8 +7,16 @@ if [ "$1" = "" ] ; then
     exit 1
 fi 
 
-bitbake -f -c clean $1
-bitbake -f -c compile $1 2>&1 | tee $1-compile.log
+LOOP=0
+while [ ! "$1" = "" ] ; 
+do 
+    LOOP=$((LOOP+1))
+    asc yellow
+    printf '\n### LOOP=%d, INFO: bbcc %s ###\n\n' ${LOOP} "${1}"
+    asc reset
+    bba $1 clean compile
+    shift 1
+done
 
 if [ ! "$2" = "" ] ; then 
     bblog $1 "$2"

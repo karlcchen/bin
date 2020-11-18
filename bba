@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# bbc 
+# bba 
 #
 
 if [ "$1" = "" ] ; then 
@@ -16,10 +16,14 @@ if [ "$1" = "" ] ; then
     exit 2
 fi 
 
+LOOP=0
 while [ ! "$1" = "" ] ; 
 do 
+    LOOP=$((LOOP+1))
     BB_ACTION="$1"
-    printf '\n### INFO: bitbake -f -c %s %s ###\n' "${BB_ACTION}" "${BB_NAME}"
+    asc yellow
+    printf '\n### LOOP=%d, INFO: bitbake -f -c %s %s ###\n\n' ${LOOP} "${BB_ACTION}" "${BB_NAME}"
+    asc reset
     bitbake -f -c ${BB_ACTION} ${BB_NAME} 2>&1 | tee ${BB_NAME}-${BB_ACTION}.log
     if [ $? -ne 0 ] ; then 
         printf '\nERROR-9: bitbake -f -c %s %s failed!\n' "${BB_ACTION}" "${BB_NAME}"

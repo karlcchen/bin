@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# bbcci-cpss
+#
+
+bba marvell-cpss 	 clean compile install
+bba marvell-cpss-appdemo clean compile install
+bba snwl-swinitlib-cpss  clean compile install
+bba snwl-diag-swinit 	 clean compile install
+bba snwl-app-demo	 clean compile install
