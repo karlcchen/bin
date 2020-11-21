@@ -1,0 +1,9 @@
+#!/bin/bash
+# 
+# repoforall 
+#
+# Example: 
+#
+# repoforall "pwd && git branch && git branch -a --color| grep '\->'"
+#
+repo forall -c "$*"
