@@ -94,7 +94,8 @@ do
         printf "${AESC_RST_ALL}"
 #
     elif [ "$1" = "test" -o "$1" = "demo" ] ; then 
-	printf "\n=== %s test/demo ===\n\n" "$0" 
+
+	printf "\n${AESC_COLOR_CYAN}=== ${AESC_COLOR_RED}%s ${AESC_COLOR_GREEN} test/demo ${AESC_COLOR_CYAN}===${AESC_RST_ALL}\n\n" "$0" 
         printf "${AESC_RST_ALL} %10s\n" "reset/rst"
         printf "${AESC_SET_BOLD} %10s ${AESC_SET_NORM} %10s\n" "bold" "normal"
         printf "${AESC_SET_D_UNDERLINED} %10s ${AESC_RST_ALL} %10s\n" "dual_uline" "reset"
