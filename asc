@@ -59,9 +59,12 @@ do
         printf "${AESC_COLOR_L_MAGENTA}"
 #
     elif [ "$1" = "default" ] ; then 
+	printf "${AESC_COLOR_DEFAULT}"
+#
+    elif [ "$1" = "rst_fg" ] ; then 
         printf "${AESC_COLOR_RST_FG}"
 #
-    elif [ "$1" = "norm" ] ; then 
+    elif [ "$1" = "normal" ] ; then 
         printf "${AESC_SET_NORM}"
 #
     elif [ "$1" = "bold" ] ; then 
@@ -77,53 +80,55 @@ do
 #
     elif [ "$1" = "uline" ] ; then 
         printf "${AESC_SET_UNDERLINED}"
-    elif [ "$1" = "unuline" ] ; then 
+    elif [ "$1" = "unuline"  -o "$1" = "rst_uline" ] ; then 
         printf "${AESC_RST_UNDERLINED}"
+    elif [ "$1" = "dual_uline" ] ; then 
+        printf "${AESC_SET_D_UNDERLINED}"
 #
-    elif [ "$1" = "blink" ] ; then 
+    elif [ "$1" = "blink" -o "$1" = "rst_blink" ] ; then 
         printf "${AESC_SET_BLINK}"
     elif [ "$1" = "unblink" ] ; then 
         printf "${AESC_RST_BLINK}"
 #
-    elif [ "$1" == "reset" ] ; then 
+    elif [ "$1" = "reset" -o "$1" = "rst" ] ; then 
         printf "${AESC_RST_ALL}"
 #
-    elif [ "$1" == "test" ] ; then 
-	echo 
-        printf "${AESC_RST_ALL} Reset All\n"
-        printf "${AESC_SET_BOLD} BOLD ${AESC_SET_NORM} Normal\n"
-        printf "${AESC_SET_D_UNDERLINED} DOUBLE UNDERLINED ${AESC_RST_ALL} Reset All\n"
+    elif [ "$1" = "test" -o "$1" = "demo" ] ; then 
+	printf "\n=== %s test/demo ===\n\n" "$0" 
+        printf "${AESC_RST_ALL} %10s\n" "reset/rst"
+        printf "${AESC_SET_BOLD} %10s ${AESC_SET_NORM} %10s\n" "bold" "normal"
+        printf "${AESC_SET_D_UNDERLINED} %10s ${AESC_RST_ALL} %10s\n" "dual_uline" "reset"
 
-        printf "${AESC_SET_UNDERLINED} UNDERLINED ${AESC_RST_UNDERLINED} UnUNDERLINED\n"
-        printf "${AESC_SET_DIM} DIM ${AESC_SET_NORM} Normal\n"
-        printf "${AESC_SET_BLINK} BLINK ${AESC_RST_BLINK} UnBLINK\n"
-        printf "${AESC_SET_REVERSE} REVSRSE ${AESC_RST_REVERSE} unREVERSE\n"
+        printf "${AESC_SET_UNDERLINED} %10s ${AESC_RST_UNDERLINED} %10s/%s\n" "uline" "unuline" "rst_uline" 
+        printf "${AESC_SET_DIM} %10s ${AESC_SET_NORM} %10s\n" "dim" "normal"
+        printf "${AESC_SET_BLINK} %10s ${AESC_RST_BLINK} %10s/%s\n" "blink" "unblink" "rst_blink"
+        printf "${AESC_SET_REVERSE} %10s ${AESC_RST_REVERSE} %10s/%s\n" "reverse" "unreverse" "rst_reverse"
 
-        printf "${AESC_COLOR_RED} RED ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_RED} LIGHT RED ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_RED} %10s ${AESC_COLOR_RST_FG} %10s\n" "red" "rst_fg"
+        printf "${AESC_COLOR_L_RED} %10s ${AESC_COLOR_DEFAULT} %10s\n" "RED" "default"
 
-        printf "${AESC_COLOR_GREEN} GREEN ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_GREEN} LIGHT GREEN ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_GREEN} %10s ${AESC_COLOR_DEFAULT} %10s\n" "green" "default"
+        printf "${AESC_COLOR_L_GREEN} %10s ${AESC_COLOR_DEFAULT} %10s\n" "GREEN" "default"
 
+        printf "${AESC_COLOR_YELLOW} %10s ${AESC_COLOR_DEFAULT} %10s\n" "yellow" "default"
+        printf "${AESC_COLOR_L_YELLOW} %10s ${AESC_COLOR_DEFAULT} %10s\n" "YELLOW" "default"
 
-        printf "${AESC_COLOR_YELLOW} YELLOW ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_YELLOW} LIGHT YELLOW ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_BLUE} %10s ${AESC_COLOR_DEFAULT} %10s\n" "blue" "default"
+        printf "${AESC_COLOR_L_BLUE} %10s ${AESC_COLOR_DEFAULT} %10s\n" "BLUE" "default"
 
-        printf "${AESC_COLOR_BLUE} BLUE ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_BLUE} LIGHT BLUE ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_MAGENTA} %10s ${AESC_COLOR_DEFAULT} %10s\n" "magenta" "default"
+        printf "${AESC_COLOR_L_MAGENTA} %10s ${AESC_COLOR_DEFAULT} %10s\n" "MAGENTA" "default"
 
-        printf "${AESC_COLOR_MAGENTA} MAGENTA ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_MAGENTA} LIGHT MAGENTA ${AESC_COLOR_DEFAULT} Default\n"
-
-        printf "${AESC_COLOR_CYAN} CYAN ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_CYAN} LIGHT CYAN ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_CYAN} %10s ${AESC_COLOR_DEFAULT} %10s\n" "cyan" "default"
+        printf "${AESC_COLOR_L_CYAN} %10s ${AESC_COLOR_DEFAULT} %10s\n" "CYAN" "default"
 #
-        printf "${AESC_COLOR_D_GREY} DARK  GREY ${AESC_COLOR_DEFAULT} Default\n"
-        printf "${AESC_COLOR_L_GREY} LIGHT GREY ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_D_GREY} %10s ${AESC_COLOR_DEFAULT} %10s\n" "grey" "default"
 
-        printf "${AESC_COLOR_WHITE} WHITE ${AESC_COLOR_DEFAULT} Default\n"
+        printf "${AESC_COLOR_L_GREY} %10s ${AESC_COLOR_RST_FG} %10s\n" "GREY" "rst_fg"
 
-        printf "${AESC_RST_ALL} Reset All\n"
+        printf "${AESC_COLOR_WHITE} %10s ${AESC_COLOR_RST_FG} %10s\n" "white" "rst_fg"
+
+        printf "${AESC_RST_ALL} %10s\n" "reset/rst"
 	echo
     else
 	if [ ${b_VERBOSE} -ne 0 ] ; then  
