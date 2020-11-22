@@ -4,6 +4,6 @@
 #
 # Example: 
 #
-# repoforall "pwd && git branch && git branch -a --color| grep '\->'"
+# repoforall "pwd && git branch && git branch -a --color | grep '\->'"
 #
 repo forall -c "$*"
