@@ -269,7 +269,7 @@ function this_usage() {
 FIND_PATTERN=""
 N_ARG_SAVED=0
 OPT_CNT=1
-while [ ! -z "$1" ] 
+while [[ ! -z "$1" ]] 
 do 
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
@@ -525,7 +525,7 @@ do
     shift 1
 done
 
-while [ ! -z "$1" ] ; 
+while [[ ! -z "$1" ]] ; 
 do 
     ARG_SAVED+=("$1")
     N_ARG_SAVED=$((N_ARG_SAVED+1))
@@ -552,7 +552,7 @@ if [ ${b_DEBUG} -ne 0 ] ; then
     LOOP=0
     printf "\n=================== dump saved argument ===========================\n"
     echo -e "DEBUG-1: N_ARGV_SAVED=${N_ARG_SAVED}, entire ARG_SAVED=\"${ARG_SAVED[@]}\"\n"
-    while [ ${LOOP} -lt  ${N_ARG_SAVED} ] ; 
+    while [[ ${LOOP} -lt  ${N_ARG_SAVED} ]]  
     do  
         printf "DEBUG-2: ARG_SAVED[%d]=\"%s\"\n" ${LOOP} "${ARG_SAVED[${LOOP}]}"      
         LOOP=$((LOOP+1))
@@ -564,7 +564,7 @@ fi
 #
 name_patterns=()
 N_NAME_PATTERN=0
-if [ "${FIND_PATTERN}" = "*" ] ; then 
+if [[ "${FIND_PATTERN}" == "*" ]] ; then 
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
     if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -584,7 +584,7 @@ else
 fi 
 
 # ========================================================================================================================
-if [ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ; then 
+if [[ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ]] ; then 
 #
 # no grep texts
 #
@@ -616,7 +616,7 @@ else
 #
 # with grep texts
 #
-    while [ ! -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ] ;
+    while [[ ! -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ]] ;
     do
     	GREP_TEXT="${ARG_SAVED[${NEXT_ARG_IDX}]}"
     	if [ ${b_DEBUG} -ne 0 ] ; then 
