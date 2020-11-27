@@ -3,13 +3,7 @@
 # fx - find and grep 
 #
 
-# disable the glob (noglob)
-# otherwise search argumnet of '*.sh' will be processed by shell
-set -f
-#
-
-b_GLOB_restore=1
-s_VERSION="1.1"
+s_VERSION="1.2"
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
@@ -24,8 +18,16 @@ FIND_EXE="find"
 
 XARGS_EXE="xargs"
 
+# disable the glob (noglob)
+# otherwise search argumnet of '*.sh' will be processed by shell
+b_GLOB_ON=1
+b_GLOB_restore=1
+#
 b_VERBOSE=0
 b_DEBUG=0
+b_find_exclude_git=1
+FIND_EXCLUDE_DIRS="-not -path '*/.git*'"
+#FIND_EXCLUDE_DIRS=""
 
 FIND_NAME="-name"
 #FIND_NAME="-iname"
@@ -48,10 +50,6 @@ FIND_TEST_NOT=""
 
 #FIND_TAIL_OPT="-prune"
 FIND_TAIL_OPT=""
-
-b_find_exclude_git=1
-FIND_EXCLUDE_DIRS="-not -path '*/.git*'"
-#FIND_EXCLUDE_DIRS=""
 
 XARGS_OPT=""
 ARG_SAVED=()
@@ -206,9 +204,9 @@ function this_usage() {
     printf " \"%soptend\"" '--'
     ${EXE_DIR}/asc green 
     printf "%s indicate end of all options parsing, treat arguments followed as non-options arguments\n" ' -->' 
-# -d
+# --depth,-d
     ${EXE_DIR}/asc yellow
-    printf " \"-d=n|-dn\"" 
+    printf " \"--depth|-d=n|-dn\"" 
     ${EXE_DIR}/asc green 
     printf " %s find -maxdepth n, default n=1, Same as long option: " "-->"
     ${EXE_DIR}/asc cyan
@@ -266,109 +264,153 @@ function this_usage() {
     ${EXE_DIR}/asc reset 
 }
 
+if [[ ${b_GLOB_ON} -ne 0 ]] ; then 
+#
+# disable "*","?", wildcard expansion in shell 
+#
+    set -f
+    if [[ $? -ne 0 ]] ; then 
+        printf '\nERROR-01A: \"set -f\" failed!\n'
+        exit 1
+    fi
+fi
+
 FIND_PATTERN=""
 N_ARG_SAVED=0
 OPT_CNT=1
 while [[ ! -z "$1" ]] 
 do 
-    if [ ${b_DEBUG} -ne 0 ] ; then 
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
     fi 
 # use "echo" failed if "$1" equals echo's options such as: "-n", etc...
 #    echo "$1" | grep '^\-\-' >/dev/null
     printf '%s\n' "$1" | grep '^\-' >/dev/null
-    if [ $? -eq 0 ] ; then  
+    if [[ $? -eq 0 ]] ; then  
         # removed trailing spaces of OPT_STR_2
         OPT_STR_1=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
         OPT_STR_2=""
         printf '%s\n' "$1" | grep '=' >/dev/null
-        if [ $? -eq 0 ] ; then 
+        if [[ $? -eq 0 ]] ; then 
             OPT_STR_2=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
         else 
             printf '%s\n' "$1" | grep "[[:digit:]]" >/dev/null
-            if [ $? -eq 0 ] ; then 
+            if [[ $? -eq 0 ]] ; then 
                 OPT_STR_1=`printf '%s\n' "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
                 OPT_STR_2=`printf '%s\n' "$1" | sed 's/[^0-9]*//g'`
             fi 
         fi  
-        if [ ${b_DEBUG} -ne 0 ] ; then 
+        if [[ ${b_DEBUG} -ne 0 ]] ; then 
             printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
-        if [ "${OPT_STR_1}" = "--verbose" ] ; then 
+        if [[ "${OPT_STR_1}" = "--verbose" ]] ; then 
 # --verbose
-            if [ -z "${OPT_STR_2}" ] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_VERBOSE=1
             else
                 b_VERBOSE=${OPT_STR_2}
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-1: set --verbose=%d, --debug=%d\n" ${b_VERBOSE} ${b_DEBUG}
             fi
         elif [ "${OPT_STR_1}" = "--debug" ] ; then 
 # --debug
-            if [ -z "${OPT_STR_2}" ] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_DEBUG=1
             else
                 b_DEBUG=${OPT_STR_2}
             fi
             b_VERBOSE=1
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
-        elif [ "${OPT_STR_1}" = "--findall" -o "${OPT_STR_1}" = "-a" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--findall" || "${OPT_STR_1}" = "-a" ]] ; then 
+#
 # --findsall, -a
+# do not exclude some directories,  ignore the ${FIND_EXCLUDE_DIRS}
+#
             b_find_exclude_git=0
-        elif [ "${OPT_STR_1}" = "--glob" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-            # default always restore glob before running find 
-        	b_GLOB_restore=1
-            else
-                b_GLOB_restore=${OPT_STR_2}
+        elif [[ "${OPT_STR_1}" == "--glob" ]] ; then
+#         
+# --glob[=yes,no, test]: control globbing behavior
+# to work with checking of "first arugment" (the filename patterns) that may has wildcards, 
+# we need to do follwoing steps: 
+#   1. disable globbing in the beginning, for checking and comparing with wildcards(*,?) functions to wrork properly 
+#   2  restore globbing finally, just before exec "find" command 
+# 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+            #
+            # --glob with no assignment, the same as --glob=no
+            # DON'T disable Globbing in the begining, thus also no need to restore
+            #
+                b_GLOB_ON=0
+        	b_GLOB_restore=0
+            elif [[ "${OPT_STR_2}" =~ "[Yy]$" ]] ; then   
+            #
+            # --glob=yes
+            # this is the default behavior 
+            #
+                b_GLOB_ON=1
+              	b_GLOB_restore=1
+            elif [[ "${OPT_STR_2}" =~ "[Nn]$" ]] ; then   
+            #
+            # --glob=no
+            # DON'T disable Globbing, thus also no need to restore
+            #
+                b_GLOB_ON=0
+              	b_GLOB_restore=0
+            elif [[ "${OPT_STR_2}" =~ "[Tt]$" ]] ; then   
+            #
+            # --glob=test
+            # for Test only: Disable globbing in the beginning as usually, but DON'T restore globbing, before exec "find" 
+            # 
+                b_GLOB_ON=1
+              	b_GLOB_restore=0
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
-                printf "\nINFO-3: restore --glob=%d\n" ${b_GLOB_restore}
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
+                printf "\nINFO-3: --glob=%s\n" "${b_GLOB_restore}"
             fi
 # --fopt, -f
-        elif [ "${OPT_STR_1}" = "--fopt" -o "${OPT_STR_1}" = "-f" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
+        elif [[ "${OPT_STR_1}" = "--fopt" || "${OPT_STR_1}" = "-f" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+                if [[ ${b_DEBUG} -ne 0 ]] ; then 
                     printf "\nWARN-2: --fopt=\"\", find options changed from \"%s\" to empty\n" "${FIND_OPT}"
                 fi
                 FIND_OPT=""
             else
                 FIND_OPT="${FIND_OPT} ${OPT_STR_2}" 
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-8: set find options changed to: \"%s\"\n" "${FIND_OPT}"
             fi 
 # --ftype, -t
-        elif [ "${OPT_STR_1}" = "--ftype" -o  "${OPT_STR_1}" = "-t" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
+        elif [[ "${OPT_STR_1}" = "--ftype" ||  "${OPT_STR_1}" = "-t" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+                if [[ ${b_DEBUG} -ne 0 ]] ; then 
                     printf "\nWARN-1: --ftype=\"\", find file type changed from \"%s\" to empty\n" "${FIND_TYPE}"
                 fi
                 FIND_TYPE=""
             else
                 FIND_TYPE="-type ${OPT_STR_2}" 
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-4: find type changed to: \"%s\"\n" "${FIND_TYPE}"
             fi
 # --fhead, -fh             
-        elif [ "${OPT_STR_1}" = "--fhead" -o "${OPT_STR_1}" = "-fh" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                if [ ${b_DEBUG} -ne 0 ] ; then 
+        elif [[ "${OPT_STR_1}" = "--fhead" || "${OPT_STR_1}" = "-fh" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+                if [[ ${b_DEBUG} -ne 0 ]] ; then 
                     printf "\nWARN-2: --fhead=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
                 fi
                 FIND_HEAD_OPT=""
             else
                 FIND_HEAD_OPT="${FIND_HEAD_OPT} ${OPT_STR_2}" 
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-5: set \"%s\" (head) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_HEAD_OPT}"
             fi
 # --ftail, -ft             
-        elif [ "${OPT_STR_1}" = "--ftail" -o "${OPT_STR_1}" = "-ft" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--ftail" || "${OPT_STR_1}" = "-ft" ]] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-2: --ftail=\"\", \"%s\" (head) OPTIONS changed from \"%s\" to empty\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
@@ -381,7 +423,7 @@ do
                 printf "\nINFO-6: set \"%s\" (tail) OPTIONS changed to: \"%s\"\n" "${FIND_EXE}" "${FIND_TAIL_OPT}"
             fi 
 # --fname=-iname,-lname,-ilname
-        elif [ "${OPT_STR_1}" = "--fname" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--fname" ]] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 printf '\nERROR-1: option %s cannot be empty!\n' "${OPT_STR_1}"
                 exit 1
@@ -391,8 +433,8 @@ do
                 printf "\nINFO-7a: option %s: set find TEST name to: \"%s\"\n" "${OPT_STR_1}" "${FIND_NAME}"
             fi 
 # --ignorecase, -i
-        elif [ "${OPT_STR_1}" = "--ignorecase" -o "${OPT_STR_1}" = "-i" ] ; then 
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--ignorecase" || "${OPT_STR_1}" = "-i" ]] ; then 
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 printf '\nWARN-3: option %s does not take any value!\n' "${OPT_STR_1}"
             fi 
             FIND_NAME="-iname"
@@ -400,7 +442,7 @@ do
                 printf "\nINFO-7b: option %s: set find TEST name to: \"%s\"\n" "${OPT_STR_1}" "${FIND_NAME}"
             fi 
 # --not: 
-        elif [ "${OPT_STR_1}" = "--not" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--not" ]] ; then 
             if [ ! -z "${OPT_STR_2}" ] ; then 
                 printf "\nERROR-OPT: option \"--not\" cannot have value!\n" 
             else
@@ -410,7 +452,7 @@ do
                 printf '\nINFO-7c: option %s, invert match\n' "${FIND_TEST_NOT}"
             fi 
 # --fpath, -fp
-        elif [ "${OPT_STR_1}" = "--fpath" -o "${OPT_STR_1}" = "-fp" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--fpath" || "${OPT_STR_1}" = "-fp" ]] ; then 
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-11: find starting path=%s\n" "${OPT_STR_1}"
             fi 
@@ -422,7 +464,7 @@ do
                 FIND_PATH="${OPT_STR_2}"
             fi
 # --gopt, -g
-        elif [ "${OPT_STR_1}" = "--gopt" -o "${OPT_STR_1}" = "-g" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--gopt" || "${OPT_STR_1}" = "-g" ]] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-3: --gopt=\"\", grep options changed from \"%s\" to empty\n" "${GREP_OPT}"
@@ -435,7 +477,7 @@ do
                 printf "\nINFO-9: grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
 # --newgopt, -ng
-        elif [ "${OPT_STR_1}" = "--newgopt" -o "${OPT_STR_1}" = "-ng" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--newgopt" || "${OPT_STR_1}" = "-ng" ]] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nWARN-3: --newgopt=\"\", grep NEW options changed from \"%s\" to empty\n" "${GREP_OPT}"
@@ -448,7 +490,7 @@ do
                 printf "\nINFO-9: grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
 # --gexe, -ge
-        elif [ "${OPT_STR_1}" = "--gexe" -o "${OPT_STR_1}" = "-ge" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--gexe" || "${OPT_STR_1}" = "-ge" ]] ; then 
             if [ -z "${OPT_STR_2}" ] ; then 
                 if [ ${b_DEBUG} -ne 0 ] ; then 
                     printf "\nERROR-3: --gexe options cannot be empty!\n"
@@ -460,51 +502,60 @@ do
                 printf "\nINFO-10: grep exe command changed to: \"%s\"\n" "${GREP_EXE}"
             fi 
 # --help -h             
-        elif [ "${OPT_STR_1}" = "--help"  -o  "${OPT_STR_1}" = "-h" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--help"  ||  "${OPT_STR_1}" = "-h" ]] ; then 
             this_usage
             exit 1
-# -d
-        elif [ "${OPT_STR_1}" = "-d" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
+# --depth -d[=n] -dn
+# set search depth 
+
+        elif [[ "${OPT_STR_1}" = "-d" || "${OPT_STR_1}" = "--depth" ]]  ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
 # default to 1 if number not specified 
                 OPT_STR_2="1"    
             fi 
             FIND_OPT="-maxdepth ${OPT_STR_2} ${FIND_OPT}"       
-# -s
-        elif [ "${OPT_STR_1}" = "-s" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-# default to 1 if number not specified 
+# -s[=n]
+# print adjcent lines of grep, which is grep option "-A" and "-B"
+# 
+        elif [[ "${OPT_STR_1}" = "-s" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+# default to -A=1,-B=1 if number not specified 
                 OPT_STR_2="1"    
             fi 
             GREP_OPT="-A${OPT_STR_2} -B${OPT_STR_2} ${GREP_OPT}"       
 #========================================================================================
         elif [ "${OPT_STR_1}" = "-bb" ] ; then 
+# -bb
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_BB}"
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-20: -bb option, change search list to: \'%s\'\n" "${FIND_PATTERN_BB}" 
             fi 
-        elif [ "${OPT_STR_1}" = "-mk" ] ; then 
+        elif [[ "${OPT_STR_1}" == "-mk" ]] ; then 
+# -mk
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_MK}"
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-21: -mk option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
             fi 
-        elif [ "${OPT_STR_1}" = "-ch" ] ; then 
+        elif [[ "${OPT_STR_1}" == "-ch" ]] ; then 
+# -ch 
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CH}"
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-22: -ch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
             fi 
-        elif [ "${OPT_STR_1}" = "-cch" ] ; then 
+        elif [[ "${OPT_STR_1}" == "-cch" ]] ; then 
+# -cch 
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_CCH}"
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-23 -cch option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
             fi 
-        elif [ "${OPT_STR_1}" = "-all" ] ; then 
+        elif [[ "${OPT_STR_1}" == "-all" ]] ; then 
+# -all
             FIND_PATTERN="${FIND_PATTERN} ${FIND_PATTERN_ALL}"
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-24: -all option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
             fi 
 #==============================================================================
-        elif [ "${OPT_STR_1}" = "--optend" ] ; then 
+        elif [[ "${OPT_STR_1}" == "--optend" ]] ; then 
 #
 # no more options and skip this option 
 #
@@ -564,7 +615,8 @@ fi
 #
 name_patterns=()
 N_NAME_PATTERN=0
-if [[ "${FIND_PATTERN}" == "*" ]] ; then 
+if [ "${FIND_PATTERN}" = "*" ] ; then 
+#if [[ "${FIND_PATTERN}" == "*" ]] ; then 
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
     if [ ${b_DEBUG} -ne 0 ] ; then 
@@ -583,26 +635,37 @@ else
     name_patterns=("${name_patterns[@]:1}")
 fi 
 
+if [[ ${b_GLOB_ON} -ne 0 && ${b_GLOB_restore} -ne 0 ]] ; then  
+#
+# restore glob makes using starting path '*' possible
+#
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+        printf '\nINFO: restore Globbing...\n' 
+    fi 
+    set +f
+    # without restore globbing, (find *) failed with error: 
+    #   find: ‘*’: No such file or directory
+fi 
+
 # ========================================================================================================================
 if [[ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ]] ; then 
 #
 # no grep texts
 #
+#
     if [ ${b_DEBUG} -ne 0 ] ; then 
         printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}" 
         ${EXE_DIR}/asc reset yellow
-        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_EXCLUDE_DIRS} ${FIND_TAIL_OPT}\n" 
+        if [ ${b_find_exclude_git} -ne 0 ] ; then 
+            echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) -not -path '*/.git*' ${FIND_TAIL_OPT}\n" 
+        else
+            echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}\n"
+        fi
         ${EXE_DIR}/asc reset 
     else
 #
 # need "\(" so that type is working for all ${FIND_NAME}("-name") not just the first one
 #
-        if [ ${b_GLOB_restore} -ne 0 ] ; then  
-#
-# restore glob makes using starting path '*' possible
-#
-            set +f
-        fi 
         if [ ${b_find_exclude_git} -ne 0 ] ; then 
             ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT}
         else
@@ -610,7 +673,7 @@ if [[ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ]] ; then
 #        ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT}
 #        find  *  -type f  \( -name index \) -not -path '*/.git*'
 # if nothing found/matched, return is non-zero 
-fi
+        fi
     fi
 else 
 #
@@ -620,10 +683,14 @@ else
     do
     	GREP_TEXT="${ARG_SAVED[${NEXT_ARG_IDX}]}"
     	if [ ${b_DEBUG} -ne 0 ] ; then 
-    		printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
-                ${EXE_DIR}/asc reset yellow
-    		echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_EXCLUDE_DIRS} ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
-                ${EXE_DIR}/asc reset 
+       	    printf "\n### DEBUG4: LOOP:%s: find FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${LOOP}" "${FIND_OPT}" "${GREP_OPT}" 
+            ${EXE_DIR}/asc reset yellow
+            if [ ${b_find_exclude_git} -ne 0 ] ; then 
+                echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} ${GREP_TEXT}\n\n"
+            else
+	        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"  
+            fi
+            ${EXE_DIR}/asc reset 
     	else 
 #
 # Note: use -print0 (null chacatcer), grep found less than when not using -print0
@@ -637,12 +704,6 @@ else
 # -  also makes -print0 working on all found files...
 # - using -print0 so filenames with "spaces" can be passed to grep correctly
 #
-            if [ ${b_GLOB_restore} -ne 0 ] ; then  
-#
-# restore glob makes using starting path '*' possible
-#
-                set +f
-            fi 
             if [ ${b_find_exclude_git} -ne 0 ] ; then 
                 ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} "${GREP_TEXT}"
             else
