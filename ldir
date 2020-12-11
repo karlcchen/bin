@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# ldir  [find_name/--]  [max_depth]  [min_depth]
+#
+
+ANY_NAME="--"
+
+FIND_NAME="${ANY_NAME}"
+MAX_DEPTH=""
+MIN_DEPTH=""
+
+FIND_TYPE="-type d"
+FIND_OPT="-depth"
+
+if [[ "$1" != "" ]]; then 
+    FIND_NAME="$1"
+fi 
+if [[ "$2" != "" ]]; then 
+    MAX_DEPTH="$2"
+fi 
+if [[ "$3" != "" ]]; then 
+    MIN_DEPTH="$3"
+fi 
+
+if [[ "${FIND_NAME}" != "${ANY_NAME}" ]]; then 
+    if [[ "${MIN_DEPTH}" != "" ]]; then 
+        find * ${FIND_OPT} -mindepth ${MIN_DEPTH} -maxdepth ${MAX_DEPTH} ${FIND_TYPE} -name "${FIND_NAME}"
+    elif [[ "${MAX_DEPTH}" != "" ]]; then 
+        find * ${FIND_OPT} -maxdepth ${MAX_DEPTH} ${FIND_TYPE} -name "${FIND_NAME}"
+    else 
+        find * ${FIND_OPT} ${FIND_TYPE} -name "${FIND_NAME}"
+    fi 
+else
+# 
+# no name to find 
+#
+    if [[ "${MIN_DEPTH}" != "" ]]; then 
+        find * ${FIND_OPT} -mindepth ${MIN_DEPTH} -maxdepth ${MAX_DEPTH} ${FIND_TYPE}
+    elif [[ "${MAX_DEPTH}" != "" ]]; then 
+        find * ${FIND_OPT} -maxdepth ${MAX_DEPTH} ${FIND_TYPE}
+    else
+        find * ${FIND_OPT} -maxdepth 0 ${FIND_TYPE}
+    fi
+fi

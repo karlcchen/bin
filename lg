@@ -1,0 +1,16 @@
+#!/bin/bash
+# 
+# lg
+
+DIR_LIST="`ls -ltr | grep ^d | awk '{print $9}'`" 
+if [[ "$1" != "" ]]; then 
+    FOUND_DIR="`echo "${DIR_LIST}" | grep "$1" | tail -n1`"
+else
+    FOUND_DIR="`echo "${DIR_LIST}" | tail -n1`"
+fi 
+if [[ ${FOUND_DIR} == "" ]]; then 
+    echo "."
+else 
+    echo "${FOUND_DIR}"
+fi 
+ 
