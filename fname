@@ -19,6 +19,9 @@ EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 
+DO_EXE_CMD=""
+DO_EXE_CMD_MAX_ARGC=5
+
 function this_usage() {
     ${EXE_DIR}/asc reset green 
     printf '\n=== search filename: %s Version:%s\n' "${EXE_BASE}" "${s_VERSION}"
@@ -27,14 +30,24 @@ function this_usage() {
     printf ' --findtype | -t: specify find type\n'
     printf '\t Example search type: file and directory: \"-t=f,d\"\n'
     printf ' --findopt | -o: specify find option, these options are placed before the (starting) path parameter\n'
-    printf '\t Valid options are: -H, -L, -P, -P is the default behavior\n'
+    printf '\t Valid options are: -H, -L, -P, Note: -P is the default behavior\n'
     printf '\t Example: -o=-L\n'
     printf ' --nolink   | -nl: do not print files that has symbolic link\n'
-    printf ' --findlink | -L: print files with their symbolic link, if any\n'
+    printf ' --exe=xx|-e=xx  : execute xx command with found result as arguments, default command is $EDITOR=%s\n' "${EDITOR}"
+    printf ' --findlink | -L : print files with their symbolic link, if any\n'
     printf '\t the same as using \"--findopt=-L\" OR \"-o=-L\"\n'
     printf ' --Ll | -lL: \"--findlink\" option plus long (ls) format output\n'
+    printf '\t --long|-ls|-l: feed find result to \"ls -l" command\n\n'
+    printf 'Examples:\n'
+    printf '\t %s %s %s\n' "${EXE_BASE}" "'*.sh'"  "-l"
+    printf '\t %s %s %s\n' "${EXE_BASE}" "soniccorex-image-dev.bb" "-e=vs"
+    printf '\t %s %s %s\n' "${EXE_BASE}" "diag-*.bb" "-e"
+    printf '\n'
     ${EXE_DIR}/asc reset
 }
+
+# needed for: fname '*.sh'
+set -f
 
 b_DEBUG=0
 b_VERBOSE=0
@@ -44,107 +57,114 @@ b_NO_LINK=0
 b_FIND_LINK=0
 N_ARG_SAVED=0
 OPT_CNT=1
-while [ ! -z "$1" ] 
+while [[ ! -z "$1" ]] 
 do 
-    if [ ${b_DEBUG} -ne 0 ] ; then 
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
     fi 
 # use "echo" failed if "$1" equals echo's options such as: "-n", etc...
 #    echo "$1" | grep '^\-\-' >/dev/null
     printf '%s\n' "$1" | grep '^\-' >/dev/null
-    if [ $? -eq 0 ] ; then  
+    if [[ $? -eq 0 ]] ; then  
         # removed trailing spaces of OPT_STR_2
         OPT_STR_1=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
         OPT_STR_2=""
 #        echo "$1" | grep '=' >/dev/null
         printf '%s\n' "$1"  | grep '=' >/dev/null
-        if [ $? -eq 0 ] ; then 
+        if [[ $? -eq 0 ]] ; then 
             OPT_STR_2=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $2 " " $3}' | sed -e 's/[[:space:]]*$//'`
         else 
             echo "$1" | grep "[[:digit:]]" >/dev/null
-            if [ $? -eq 0 ] ; then 
+            if [[ $? -eq 0 ]] ; then 
                 OPT_STR_1=`printf '%s\n' "$1" | sed 's/[[:digit:]]/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
                 OPT_STR_2=`printf '%s\n' "$1" | sed 's/[^0-9]*//g'`
             fi 
         fi  
-        if [ ${b_DEBUG} -ne 0 ] ; then 
+        if [[ ${b_DEBUG} -ne 0 ]] ; then 
             printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
 #
-        if [ "${OPT_STR_1}" = "--verbose" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
+        if [[ "${OPT_STR_1}" = "--verbose" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_VERBOSE=1
             else
                 b_VERBOSE=${OPT_STR_2}
             fi
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-1: set --verbose=%d, --debug=%d\n" ${b_VERBOSE} ${b_DEBUG}
             fi
-        elif [ "${OPT_STR_1}" = "--debug" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--debug" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_DEBUG=1
             else
                 b_DEBUG=${OPT_STR_2}
             fi
             b_VERBOSE=1
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
-        elif [ "${OPT_STR_1}" = "--type" -o "${OPT_STR_1}" = "-t" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" == "--exe" || "${OPT_STR_1}" == "-e" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
+                DO_EXE_CMD="${OPT_STR_2}"
+            else
+                if [[ "${EDITOR}" != "" ]]; then 
+                    DO_EXE_CMD="${EDITOR}"
+                else
+                    printf '\nERROR-01A: --exe option without command specified!\n' 
+                    exit 1
+                fi
+            fi
+        elif [[ "${OPT_STR_1}" == "--type" || "${OPT_STR_1}" == "-t" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_TYPE="${OPT_STR_2}"
             fi
-        elif [ "${OPT_STR_1}" = "--type" -o "${OPT_STR_1}" = "-t" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
-                FIND_TYPE="${OPT_STR_2}"
-            fi
-        elif [ "${OPT_STR_1}" = "--curdir" -o "${OPT_STR_1}" = "-c" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--curdir" || "${OPT_STR_1}" == "-c" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 CUR_DIR="${OPT_STR_2}"
             fi        
-        elif [ "${OPT_STR_1}" = "--apath" -o "${OPT_STR_1}" = "-a" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--apath" || "${OPT_STR_1}" == "-a" ]] ; then  
             b_ABS_PATH=1
-        elif [ "${OPT_STR_1}" = "--rpath" -o "${OPT_STR_1}" = "-r" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--rpath" || "${OPT_STR_1}" == "-r" ]] ; then  
             b_ABS_PATH=0
-        elif [ "${OPT_STR_1}" = "-d" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" == "-d" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_OPT_GLOBAL="${FIND_OPT_GLOBAL} -maxdepth ${OPT_STR_2}"
             fi
-        elif [ "${OPT_STR_1}" = "--nolink" -o "${OPT_STR_1}" = "-nl" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--nolink" || "${OPT_STR_1}" == "-nl" ]] ; then  
             b_NO_LINK=1
-        elif [ "${OPT_STR_1}" = "--not" -o "${OPT_STR_1}" = "-n" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--not" || "${OPT_STR_1}" == "-n" ]] ; then  
             FIND_TEST_NOT="-not"
 # --fname=-iname,-lname,-ilname
-        elif [ "${OPT_STR_1}" = "--fname" ] ; then 
-            if [ -z "${OPT_STR_2}" ] ; then 
-                printf '\nERROR-1: option %s cannot be empty!\n' "${OPT_STR_1}"
+        elif [[ "${OPT_STR_1}" == "--fname" ]] ; then 
+            if [[ -z "${OPT_STR_2}" ]] ; then 
+                printf '\nERROR-1B: option %s cannot be empty!\n' "${OPT_STR_1}"
                 exit 1
             fi 
             FIND_NAME="${OPT_STR_2}"
-            if [ ${b_DEBUG} -ne 0 ] ; then 
+            if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-7a: option %s: set find TEST name to: \"%s\"\n" "${OPT_STR_1}" "${FIND_NAME}"
             fi 
-        elif [ "${OPT_STR_1}" = "--ignorecase" -o  "${OPT_STR_1}" = "-i" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--ignorecase" ||  "${OPT_STR_1}" == "-i" ]] ; then  
             NAME_CASE="-iname"
-        elif [ "${OPT_STR_1}" = "--findlink" -o  "${OPT_STR_1}" = "-L" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--findlink" ||  "${OPT_STR_1}" == "-L" ]] ; then  
             b_FIND_LINK=1
             FIND_OPT1="-L"
-        elif [ "${OPT_STR_1}" = "--findopt" -o  "${OPT_STR_1}" = "-o" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" == "--findopt" || "${OPT_STR_1}" == "-o" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_OPT1="${OPT_STR_2}"
             fi
-        elif [ "${OPT_STR_1}" = "--gopt1" -o  "${OPT_STR_1}" = "-g" ] ; then  
-            if [ ! -z "${OPT_STR_2}" ] ; then 
+        elif [[ "${OPT_STR_1}" == "--gopt1" ||  "${OPT_STR_1}" == "-g" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_OPT_GLOBAL="${FIND_OPT_GLOBAL} ${OPT_STR_2}"
             fi
-        elif [ "${OPT_STR_1}" = "-Ll" -o  "${OPT_STR_1}" = "-lL" ] ; then  
+        elif [[ "${OPT_STR_1}" == "-Ll" ||  "${OPT_STR_1}" == "-lL" ]] ; then  
             b_FIND_LINK=1
             b_LS_LONG=1
             FIND_OPT1="-L"
-        elif [ "${OPT_STR_1}" = "--long" -o  "${OPT_STR_1}" = "-l" ] ; then  
+        elif [[ "${OPT_STR_1}" == "--long" || "${OPT_STR_1}" == "-l"  || "${OPT_STR_1}" == "-ls" ]] ; then  
             b_LS_LONG=1
         #==============================================================================
-        elif [ "${OPT_STR_1}" = "--optend" ] ; then 
+        elif [[ "${OPT_STR_1}" = "--optend" ]] ; then 
 #
 # no more options and skip this option 
 #
@@ -165,14 +185,14 @@ do
     shift 1
 done 
 
-while [ ! -z "$1" ] ; 
+while [[ ! -z "$1" ]] ; 
 do 
     ARG_SAVED+=("$1")
     N_ARG_SAVED=$((N_ARG_SAVED+1))
     shift 1
 done 
 
-if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then 
+if [[ "${ARG_SAVED[0]}" == "" &&  "${FIND_PATTERN}" == "" ]] ; then 
     this_usage
     exit 1
 fi
@@ -180,7 +200,11 @@ fi
 FIND_SPEC="${ARG_SAVED[@]}"
 FIND_SPEC_BASENAME="`basename ${ARG_SAVED[0]}`"
 FIND_SPEC_DIRNAME="`dirname ${ARG_SAVED[0]}`"
-if [ ${b_VERBOSE} -ne 0 ] ; then 
+
+# restore GLOB
+    set +f
+
+if [[ ${b_VERBOSE} -ne 0 ]] ; then 
     echo "FIND_SPEC=${FIND_SPEC}"
     echo "FIND_SPEC_BASENAME=${FIND_SPEC_BASENAME}"
     echo "FIND_SPEC_DIRNAME=${FIND_SPEC_DIRNAME}"
@@ -191,35 +215,54 @@ if [ ${b_VERBOSE} -ne 0 ] ; then
     echo "CUR_DIR=${CUR_DIR}"
     echo "b_NO_LINK=${b_NO_LINK}"
     echo "b_FIND_LINK=${b_FIND_LINK}"
-fi
-
-if [ ${b_VERBOSE} -ne 0 ] ; then 
     echo
     echo "find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}" 
     echo
     exit 1
 else
     FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
-    #FOUND_LIST=`find . -type f -name '*.sh'` 
-    if [ $? -eq 0 ] ; then 
-        if [ ${b_VERBOSE} -ne 0 ] ; then 
+    # printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
+    if [[ $? -eq 0 ]] ; then 
+        if [[ ${b_VERBOSE} -ne 0 ]] ; then 
             echo -e "\n=== start of list ==="
             echo "FOUND_LIST=\"${FOUND_LIST}\""
             echo -e "=== end of list ===\n"
         fi 
-        if [ "${FOUND_LIST}" != "" ] ; then 
-            if [ ${b_NO_LINK} -ne 0 ] ; then  
+        if [[ "${FOUND_LIST}" != "" ]] ; then 
+            if [[ ${b_NO_LINK} -ne 0 ]] ; then  
     #
     # print files that has NO symbolic links
     #
-                echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l
-            elif [ ${b_LS_LONG} -ne 0 ] ; then  
-                echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l
-            elif [ ${b_ABS_PATH} -ne 0 ] ; then  
-                echo "${FOUND_LIST}" | xargs realpath | sort
+                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l`"
+            elif [[ ${b_LS_LONG} -ne 0 ]] ; then  
+                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l`"
+            elif [[ ${b_ABS_PATH} -ne 0 ]] ; then  
+                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
             else
-                echo "${FOUND_LIST}" | sort
+                RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
             fi
         fi 
     fi
 fi
+
+if [[ "${RESULT_LIST}" != "" ]] ; then 
+    printf '%s\n' "${RESULT_LIST}"
+    if [[ "${DO_EXE_CMD}" != "" ]] ; then
+        # printf '\n DO_EXE_CMD= %s %s\n\n' "${DO_EXE_CMD}" "${RESULT_LIST}"
+        N_LINES="`echo "${RESULT_LIST}" | wc -l`"
+        if [[ ${N_LINES} -gt ${DO_EXE_CMD_MAX_ARGC} ]] ; then 
+            ${EXE_DIR}/asc reset blue
+            printf '\n More than %d arguments found for command ' ${DO_EXE_CMD_MAX_ARGC}
+            ${EXE_DIR}/asc yellow
+            printf '%s\n' "${DO_EXE_CMD}"
+            ${EXE_DIR}/asc reset
+            read -p "###  Are you sure you want to do it (y/n)?" CONT
+            if [[ "${CONT}" != "Y" && "${CONT}" != "y" ]]; then		
+	        printf "\n Abort Executing %s\n" "${DO_EXE_CMD}"
+	        exit 11
+            fi
+        fi  
+        ${DO_EXE_CMD} ${RESULT_LIST} & 
+    fi
+fi
+
