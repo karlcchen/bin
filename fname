@@ -37,11 +37,16 @@ function this_usage() {
     printf ' --findlink | -L : print files with their symbolic link, if any\n'
     printf '\t the same as using \"--findopt=-L\" OR \"-o=-L\"\n'
     printf ' --Ll | -lL: \"--findlink\" option plus long (ls) format output\n'
-    printf '\t --long|-ls|-l: feed find result to \"ls -l" command\n\n'
-    printf 'Examples:\n'
+    printf ' --long|-ls|-l: feed find result to \"ls -l" command\n'
+    printf ' --num|-n: display line number, auto enabled if use --exe/-e\n'
+    printf ' --dir|-d: separated to dirname/basename\n'
+    printf ' --file|-f: serapated to basename/dirname, put basename before dirname\n'
+    printf '\nExamples:\n'
     printf '\t %s %s %s\n' "${EXE_BASE}" "'*.sh'"  "-l"
     printf '\t %s %s %s\n' "${EXE_BASE}" "soniccorex-image-dev.bb" "-e=vs"
     printf '\t %s %s %s\n' "${EXE_BASE}" "diag-*.bb" "-e"
+    printf '\t %s %s %s\n' "${EXE_BASE}" "diag-*.bb" "-d -n"
+    printf '\t %s %s %s\n' "${EXE_BASE}" "diag-*.bb" "-f -e"
     printf '\n'
     ${EXE_DIR}/asc reset
 }
@@ -55,6 +60,8 @@ b_ABS_PATH=0
 b_LS_LONG=0
 b_NO_LINK=0
 b_FIND_LINK=0
+b_DIS_NUM=0
+b_DIS_STYLE=0
 N_ARG_SAVED=0
 OPT_CNT=1
 while [[ ! -z "$1" ]] 
@@ -114,6 +121,7 @@ do
                     exit 1
                 fi
             fi
+            b_DIS_NUM=1
         elif [[ "${OPT_STR_1}" == "--type" || "${OPT_STR_1}" == "-t" ]] ; then  
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_TYPE="${OPT_STR_2}"
@@ -122,6 +130,12 @@ do
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 CUR_DIR="${OPT_STR_2}"
             fi        
+        elif [[ "${OPT_STR_1}" == "--num" || "${OPT_STR_1}" == "-n" ]] ; then  
+            b_DIS_NUM=1
+        elif [[ "${OPT_STR_1}" == "--dir" || "${OPT_STR_1}" == "-d" ]] ; then  
+            b_DIS_STYLE=1
+        elif [[ "${OPT_STR_1}" == "--file" || "${OPT_STR_1}" == "-f" ]] ; then  
+            b_DIS_STYLE=2
         elif [[ "${OPT_STR_1}" == "--apath" || "${OPT_STR_1}" == "-a" ]] ; then  
             b_ABS_PATH=1
         elif [[ "${OPT_STR_1}" == "--rpath" || "${OPT_STR_1}" == "-r" ]] ; then  
@@ -233,28 +247,133 @@ else
     #
     # print files that has NO symbolic links
     #
+    # "--nolink" || "-nl" 
+    #
                 RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l`"
             elif [[ ${b_LS_LONG} -ne 0 ]] ; then  
+    #
+    # "-Ll" || "-lL" ]] 
+    #
                 RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l`"
             elif [[ ${b_ABS_PATH} -ne 0 ]] ; then  
+    #
+    # "--apath" || "-a" ]]
+    #
                 RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
             else
+    #
+    # defaukt
+    #
                 RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
             fi
         fi 
+#
     fi
 fi
-
+#
 if [[ "${RESULT_LIST}" != "" ]] ; then 
-    printf '%s\n' "${RESULT_LIST}"
+    if [[ ${b_DIS_STYLE} -ne 0 ]] ; then 
+        LINE_NUM=0
+        if [[ ${b_DIS_STYLE} -eq 1 ]] ; then 
+# ===================================================================================
+# -dir | -d
+            MAX_STRLEN=0
+            for line in ${RESULT_LIST}
+            do 
+                DIRNAME="$(dirname ${line})"
+                if [[ ${#DIRNAME} -gt ${MAX_STRLEN} ]] ; then 
+                    MAX_STRLEN=${#DIRNAME}
+                fi
+            done
+#
+#        printf '\n\nDEBUG: MAX_STRLEN=%d\n\n' ${MAX_STRLEN} 
+#
+
+            for line in ${RESULT_LIST}
+            do 
+                LINE_NUM=$((LINE_NUM+1))
+                FILE_BASENAME="$(basename ${line})"
+                FILE_DIRNAME="$(dirname ${line})" 
+                N_SPACES=$((MAX_STRLEN-${#FILE_DIRNAME})) 
+    #
+    #            printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
+    #
+                if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
+                    printf %'02d\t' ${LINE_NUM}
+                fi
+                printf '%s ' "${FILE_DIRNAME}"
+                n=0 
+                while [[ ${n} -lt ${N_SPACES} ]]
+                do 
+                    printf ' '
+                    n=$((n+1))
+                done  
+                printf '%s\n' "${FILE_BASENAME}" 
+            done
+        else
+# ===================================================================================
+# --file | -f
+            MAX_STRLEN=0
+            for line in ${RESULT_LIST}
+            do 
+                FILENAME="$(basename ${line})"
+                if [[ ${#FILENAME} -gt ${MAX_STRLEN} ]] ; then 
+                    MAX_STRLEN=${#FILENAME}
+                fi
+            done
+#
+            for line in ${RESULT_LIST}
+            do 
+                LINE_NUM=$((LINE_NUM+1))
+                FILE_BASENAME="$(basename ${line})"
+                FILE_DIRNAME="$(dirname ${line})" 
+                N_SPACES=$((MAX_STRLEN-${#FILE_BASENAME})) 
+    #
+    #            printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
+    #
+                if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
+                    printf '%02d\t' ${LINE_NUM}
+                fi
+                printf '%s ' "${FILE_BASENAME}"
+                n=0 
+                while [[ ${n} -lt ${N_SPACES} ]]
+                do 
+                    printf ' '
+                    n=$((n+1))
+                done  
+                printf '%s\n' "${FILE_DIRNAME}" 
+            done
+        fi 
+    else
+# =============================================================================
+# default display 
+#
+        LINE_NUM=0
+        for line in ${RESULT_LIST}
+        do 
+            LINE_NUM=$((LINE_NUM+1))
+            if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
+                printf '%02d\t' ${LINE_NUM} 
+            fi
+            printf '%s\n' "${line}" 
+        done 
+    fi
     if [[ "${DO_EXE_CMD}" != "" ]] ; then
         # printf '\n DO_EXE_CMD= %s %s\n\n' "${DO_EXE_CMD}" "${RESULT_LIST}"
         N_LINES="`echo "${RESULT_LIST}" | wc -l`"
         if [[ ${N_LINES} -gt ${DO_EXE_CMD_MAX_ARGC} ]] ; then 
+            ${EXE_DIR}/asc reset blink yellow
+            printf '\n WARNING:\n' 
             ${EXE_DIR}/asc reset blue
-            printf '\n More than %d arguments found for command ' ${DO_EXE_CMD_MAX_ARGC}
+            printf ' run '
             ${EXE_DIR}/asc yellow
-            printf '%s\n' "${DO_EXE_CMD}"
+            printf '%s' "${DO_EXE_CMD}"
+            ${EXE_DIR}/asc blue
+            printf ' with ' 
+            ${EXE_DIR}/asc yellow 
+            printf '%d' ${LINE_NUM}
+            ${EXE_DIR}/asc reset blue
+            printf ' (above pathnames) as arguments\n' ${LINE_NUM}
             ${EXE_DIR}/asc reset
             read -p "###  Are you sure you want to do it (y/n)?" CONT
             if [[ "${CONT}" != "Y" && "${CONT}" != "y" ]]; then		
