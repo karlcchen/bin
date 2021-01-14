@@ -5,9 +5,9 @@
 
 s_VERSION="1.2"
 
-#CUR_DIR="$(pwd)"
-#CUR_DIR='.'
-CUR_DIR='*'
+#START_DIR="$(pwd)"
+#START_DIR='.'
+START_DIR='*'
 FIND_OPT1=""
 FIND_OPT2=""
 FIND_TYPE="f"
@@ -37,10 +37,12 @@ function this_usage() {
     printf ' --findlink | -L : print files with their symbolic link, if any\n'
     printf '\t the same as using \"--findopt=-L\" OR \"-o=-L\"\n'
     printf ' --Ll | -lL: \"--findlink\" option plus long (ls) format output\n'
+    printf ' --start=x|-s=x: search starting directory at x\n'
     printf ' --long|-ls|-l: feed find result to \"ls -l" command\n'
     printf ' --num|-n: display line number, auto enabled if use --exe/-e\n'
     printf ' --dir|-d: separated to dirname/basename\n'
     printf ' --file|-f: serapated to basename/dirname, put basename before dirname\n'
+    printf ' --color=x|-c=x: set output color to x, default: -c=green\n'
     printf '\nExamples:\n'
     printf '\t %s %s %s\n' "${EXE_BASE}" "'*.sh'"  "-l"
     printf '\t %s %s %s\n' "${EXE_BASE}" "soniccorex-image-dev.bb" "-e=vs"
@@ -62,6 +64,7 @@ b_NO_LINK=0
 b_FIND_LINK=0
 b_DIS_NUM=0
 b_DIS_STYLE=0
+s_COLOR=""
 N_ARG_SAVED=0
 OPT_CNT=1
 while [[ ! -z "$1" ]] 
@@ -126,9 +129,17 @@ do
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_TYPE="${OPT_STR_2}"
             fi
-        elif [[ "${OPT_STR_1}" = "--curdir" || "${OPT_STR_1}" == "-c" ]] ; then  
+        elif [[ "${OPT_STR_1}" = "--start" || "${OPT_STR_1}" == "-s" ]] ; then  
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
-                CUR_DIR="${OPT_STR_2}"
+                START_DIR="${OPT_STR_2}"
+            else 
+                printf '\nWARNING: no value found for option --start/-s\n'  
+            fi        
+        elif [[ "${OPT_STR_1}" = "--color" || "${OPT_STR_1}" == "-c" ]] ; then  
+            if [[ ! -z "${OPT_STR_2}" ]] ; then 
+                s_COLOR="${OPT_STR_2}"
+            else
+                s_COLOR="green"
             fi        
         elif [[ "${OPT_STR_1}" == "--num" || "${OPT_STR_1}" == "-n" ]] ; then  
             b_DIS_NUM=1
@@ -226,15 +237,15 @@ if [[ ${b_VERBOSE} -ne 0 ]] ; then
     echo "FIND_OPT1=${FIND_OPT1}"
     echo "FIND_OPT_GLOBAL=${FIND_OPT_GLOBAL}"
     echo "FIND_TEST_NOT=${FIND_TEST_NOT}"
-    echo "CUR_DIR=${CUR_DIR}"
+    echo "START_DIR=${START_DIR}"
     echo "b_NO_LINK=${b_NO_LINK}"
     echo "b_FIND_LINK=${b_FIND_LINK}"
     echo
-    echo "find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}" 
+    echo "find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}" 
     echo
     exit 1
 else
-    FOUND_LIST="`find ${FIND_OPT1} ${CUR_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
+    FOUND_LIST="`find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
     # printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
     if [[ $? -eq 0 ]] ; then 
         if [[ ${b_VERBOSE} -ne 0 ]] ; then 
@@ -272,6 +283,9 @@ else
 fi
 #
 if [[ "${RESULT_LIST}" != "" ]] ; then 
+    if [[ "${s_COLOR}" != "" ]] ; then 
+        ${EXE_DIR}/asc ${s_COLOR}
+    fi 
     if [[ ${b_DIS_STYLE} -ne 0 ]] ; then 
         LINE_NUM=0
         if [[ ${b_DIS_STYLE} -eq 1 ]] ; then 
@@ -383,5 +397,10 @@ if [[ "${RESULT_LIST}" != "" ]] ; then
         fi  
         ${DO_EXE_CMD} ${RESULT_LIST} & 
     fi
+#
+    if [[ "${s_COLOR}" != "" ]] ; then 
+        ${EXE_DIR}/asc reset
+    fi 
 fi
+
 
