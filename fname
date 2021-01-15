@@ -229,7 +229,7 @@ FIND_SPEC_DIRNAME="`dirname ${ARG_SAVED[0]}`"
 # restore GLOB
     set +f
 
-if [[ ${b_VERBOSE} -ne 0 ]] ; then 
+if [[ ${b_DEBUG} -ne 0 ]] ; then 
     echo "FIND_SPEC=${FIND_SPEC}"
     echo "FIND_SPEC_BASENAME=${FIND_SPEC_BASENAME}"
     echo "FIND_SPEC_DIRNAME=${FIND_SPEC_DIRNAME}"
@@ -243,50 +243,59 @@ if [[ ${b_VERBOSE} -ne 0 ]] ; then
     echo
     echo "find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}" 
     echo
-    exit 1
-else
-    FOUND_LIST="`find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
-    # printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
-    if [[ $? -eq 0 ]] ; then 
-        if [[ ${b_VERBOSE} -ne 0 ]] ; then 
-            echo -e "\n=== start of list ==="
-            echo "FOUND_LIST=\"${FOUND_LIST}\""
-            echo -e "=== end of list ===\n"
-        fi 
-        if [[ "${FOUND_LIST}" != "" ]] ; then 
-            if [[ ${b_NO_LINK} -ne 0 ]] ; then  
-    #
-    # print files that has NO symbolic links
-    #
-    # "--nolink" || "-nl" 
-    #
-                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | uniq -u | xargs ls -l`"
-            elif [[ ${b_LS_LONG} -ne 0 ]] ; then  
-    #
-    # "-Ll" || "-lL" ]] 
-    #
-                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort | xargs ls -l`"
-            elif [[ ${b_ABS_PATH} -ne 0 ]] ; then  
-    #
-    # "--apath" || "-a" ]]
-    #
-                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
-            else
-    #
-    # defaukt
-    #
-                RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
-            fi
-        fi 
-#
-    fi
 fi
+
+RESULT_LIST=""
+FOUND_LIST="`find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
+# printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
+if [[ $? -eq 0 ]] ; then 
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+        printf '\n=== start of FOUND_LIST ===\n'
+        printf 'FOUND_LIST=\n%s\n' "${FOUND_LIST}"
+        printf '=== end of FOUND_LIST ===\n\n'
+    fi 
+    if [[ "${FOUND_LIST}" != "" ]] ; then 
+        if [[ ${b_ABS_PATH} -ne 0 ]] ; then  
 #
+# "--apath" || "-a" ]]
+#
+            RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
+        else
+#
+# default 
+#
+            RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
+        fi
+    fi 
+fi
+
 if [[ "${RESULT_LIST}" != "" ]] ; then 
+#
+    NEW_LIST=""
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+        printf '\n=== start of RESULT_LIST ===\n'
+        printf 'RESULT_LIST=\n%s\n' "${RESULT_LIST}"
+        printf '=== end of  RESULT_LIST ===\n\n'
+    fi 
+#
     if [[ "${s_COLOR}" != "" ]] ; then 
         ${EXE_DIR}/asc ${s_COLOR}
     fi 
-    if [[ ${b_DIS_STYLE} -ne 0 ]] ; then 
+    if [[ ${b_NO_LINK} -ne 0 ]] ; then  
+#
+# print files that has NO symbolic links
+#
+# --long" | -l" | -ls
+#
+        NEW_LIST="`echo "${RESULT_LIST}" | uniq -u | xargs ls -l`"
+        printf '%s\n' "${NEW_LIST}"
+    elif [[ ${b_LS_LONG} -ne 0 ]] ; then  
+#
+# "-Ll" || "-lL" ]] 
+#
+        NEW_LIST="`echo "${RESULT_LIST}" | xargs ls -l`"
+        printf '%s\n' "${NEW_LIST}"
+    elif [[ ${b_DIS_STYLE} -ne 0 ]] ; then 
         LINE_NUM=0
         if [[ ${b_DIS_STYLE} -eq 1 ]] ; then 
 # ===================================================================================
@@ -299,19 +308,18 @@ if [[ "${RESULT_LIST}" != "" ]] ; then
                     MAX_STRLEN=${#DIRNAME}
                 fi
             done
-#
-#        printf '\n\nDEBUG: MAX_STRLEN=%d\n\n' ${MAX_STRLEN} 
-#
-
+#            if [[ ${b_DEBUG} -ne 0 ]] ; then 
+#                printf '\nDEBUG: MAX_STRLEN=%d\n' ${MAX_STRLEN} 
+#            fi
             for line in ${RESULT_LIST}
             do 
                 LINE_NUM=$((LINE_NUM+1))
                 FILE_BASENAME="$(basename ${line})"
                 FILE_DIRNAME="$(dirname ${line})" 
                 N_SPACES=$((MAX_STRLEN-${#FILE_DIRNAME})) 
-    #
-    #            printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
-    #
+#                if [[ ${b_DEBUG} -ne 0 ]] ; then 
+#                    printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
+#                fi
                 if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
                     printf %'02d\t' ${LINE_NUM}
                 fi
@@ -336,18 +344,22 @@ if [[ "${RESULT_LIST}" != "" ]] ; then
                 fi
             done
 #
+#            if [[ ${b_DEBUG} -ne 0 ]] ; then 
+#                printf '\nDEBUG: MAX_STRLEN=%d\n' ${MAX_STRLEN} 
+#            fi
+#
             for line in ${RESULT_LIST}
             do 
                 LINE_NUM=$((LINE_NUM+1))
                 FILE_BASENAME="$(basename ${line})"
                 FILE_DIRNAME="$(dirname ${line})" 
                 N_SPACES=$((MAX_STRLEN-${#FILE_BASENAME})) 
-    #
-    #            printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
-    #
-                if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
-                    printf '%02d\t' ${LINE_NUM}
+                if [[ ${b_DEBUG} -ne 0 ]] ; then 
+                    printf '\n DEBUG: N_SPACES=%d\n' ${N_SPACES}
                 fi
+#                if [[ ${b_DIS_NUM} -ne 0 ]] ; then 
+#                    printf '%02d\t' ${LINE_NUM}
+#                fi
                 printf '%s ' "${FILE_BASENAME}"
                 n=0 
                 while [[ ${n} -lt ${N_SPACES} ]]
@@ -395,12 +407,11 @@ if [[ "${RESULT_LIST}" != "" ]] ; then
 	        exit 11
             fi
         fi  
-        ${DO_EXE_CMD} ${RESULT_LIST} & 
+#        ${DO_EXE_CMD} ${RESULT_LIST} & 
+        ${DO_EXE_CMD} ${FOUND_LIST} & 
     fi
 #
     if [[ "${s_COLOR}" != "" ]] ; then 
         ${EXE_DIR}/asc reset
     fi 
 fi
-
-
