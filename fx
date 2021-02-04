@@ -52,7 +52,6 @@ FIND_TEST_NOT=""
 FIND_TAIL_OPT=""
 
 XARGS_OPT=""
-ARG_SAVED=()
 
 # predefined wildcards for find -name patterns
 FIND_PATTERN_BB='*.bb *.bbappend *.inc *.bbclass *.conf' 
@@ -275,8 +274,9 @@ if [[ ${b_GLOB_ON} -ne 0 ]] ; then
     fi
 fi
 
-FIND_PATTERN=""
+ARG_SAVED=()
 N_ARG_SAVED=0
+FIND_PATTERN=""
 OPT_CNT=1
 while [[ ! -z "$1" ]] 
 do 
@@ -324,6 +324,10 @@ do
             if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-2: set --debug=%d, verbose=%d\n" ${b_DEBUG} ${b_VERBOSE}
             fi
+# --help, -h             
+        elif [[ "${OPT_STR_1}" = "--help"  ||  "${OPT_STR_1}" = "-h" ]] ; then 
+            this_usage
+            exit 1
         elif [[ "${OPT_STR_1}" = "--findall" || "${OPT_STR_1}" = "-a" ]] ; then 
 #
 # --findsall, -a
@@ -501,10 +505,6 @@ do
             if [ ${b_DEBUG} -ne 0 ] ; then 
                 printf "\nINFO-10: grep exe command changed to: \"%s\"\n" "${GREP_EXE}"
             fi 
-# --help -h             
-        elif [[ "${OPT_STR_1}" = "--help"  ||  "${OPT_STR_1}" = "-h" ]] ; then 
-            this_usage
-            exit 1
 # --depth -d[=n] -dn
 # set search depth 
 
@@ -583,33 +583,34 @@ do
     shift 1
 done 
 
-if [ "${ARG_SAVED[0]}" = "" -a  "${FIND_PATTERN}" = "" ] ; then 
+if [[ "${ARG_SAVED[0]}" == "" &&  "${FIND_PATTERN}" == "" ]] ; then 
     this_usage
     exit 1
 fi
 
 #
 NEXT_ARG_IDX=0
-if [ "${FIND_PATTERN}" = "" ] ; then 
-    if [ "${ARG_SAVED[${NEXT_ARG_IDX}]}" = "" ] ; then 
-        printf "\nERROR-30: ARG_SAVED[%d] should not be empty here !\n" ${NEXT_ARG_IDX}
+if [[ "${FIND_PATTERN}" == "" ]] ; then 
+    if [[ "${ARG_SAVED[${NEXT_ARG_IDX}]}" == "" ]] ; then 
+        printf '\nERROR-30: ARG_SAVED[%d] should not be empty here !\n' ${NEXT_ARG_IDX}
         exit 1
     fi 
     FIND_PATTERN="${ARG_SAVED[${NEXT_ARG_IDX}]}" 
     NEXT_ARG_IDX=$((NEXT_ARG_IDX+1))
 fi  
 
-if [ ${b_DEBUG} -ne 0 ] ; then 
+if [[ ${b_DEBUG} -ne 0 ]] ; then 
     LOOP=0
-    printf "\n=================== dump saved argument ===========================\n"
-    echo -e "DEBUG-1: N_ARGV_SAVED=${N_ARG_SAVED}, entire ARG_SAVED=\"${ARG_SAVED[@]}\"\n"
+    printf '\n=================== dump saved argument ===========================\n'
+    printf 'DEBUG-1: N_ARGV_SAVED=%d, entire ARG_SAVED=\"%d"\n' ${N_ARG_SAVED} ${ARG_SAVED[@]}
     while [[ ${LOOP} -lt  ${N_ARG_SAVED} ]]  
     do  
-        printf "DEBUG-2: ARG_SAVED[%d]=\"%s\"\n" ${LOOP} "${ARG_SAVED[${LOOP}]}"      
+        printf 'DEBUG-2: ARG_SAVED[%d]=\"%s\"\n' ${LOOP} "${ARG_SAVED[${LOOP}]}"      
         LOOP=$((LOOP+1))
     done
-    printf "====================================================================\n"
-    printf "DEBUG-3: FIND_PATTERN=\"%s\"\n\n" "${FIND_PATTERN}"
+    printf '====================================================================\n'
+    printf 'DEBUG-3: FIND_PATTERN=\"%s\"\n\n" "${FIND_PATTERN}'
+    printf '\n'
 fi 
 
 #
