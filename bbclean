@@ -3,37 +3,119 @@
 # bbclean
 #
 
-WORK_PATH="build_output/work/aarch64-soniccorex-linux"
+GITLAB_SCX_SERVER=sonicgit
 
-if [ "$1" = "" ] ; then 
-    printf 'ERROR-1: first input, bitbake do_action not found!\n'
-    exit 1
+EXE_DIR="$(realpath $(dirname $0))"
+EXE_BASENAME="`basename $0`"
+
+WORK_BASE_DIR="build_output/work"
+ARCH_DIR_ARM="aarch64-soniccorex-linux"
+ARCH_DIR_INTEL="corei7-64-soniccorex-linux"
+
+ping -c 1 ${GITLAB_SCX_SERVER}
+if [[ $? -ne 0 ]] ; then 
+    printf '\nERROR-99: ping %s failed!\n' "${GITLAB_SCX_SERVER}"
+    exit 99
 fi 
 
-while [ ! "$1" = "" ] ; 
+if [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_ARM}"  ]]; then 
+    WORK_PATH="build_output/work/aarch64-soniccorex-linux"
+#
+    ${EXE_DIR}/asc magenta
+    printf '\n### ARM AARCH64 '
+    ${EXE_DIR}/asc green
+    printf ' cross build\n'
+    printf 'Work DIR: '
+    ${EXE_DIR}/asc magenta
+    printf '%s' "${WORK_BASE_DIR}/${ARCH_DIR_ARM}"
+    ${EXE_DIR}/asc reset
+#
+elif [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"  ]]; then  
+    WORK_PATH="build_output/work/corei7-64-soniccorex-linux"
+#
+    ${EXE_DIR}/asc magenta
+    printf '\n### INTEL X86_64 '
+    ${EXE_DIR}/asc green
+    printf 'target cross build\n'
+    printf 'Work DIR: '
+    ${EXE_DIR}/asc magenta
+    printf '%s' "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"
+    ${EXE_DIR}/asc reset
+#
+else
+    printf '\nERROR-2: Cannot find Build Working Architecture in DIR "%s"\n' "${WORK__BASE_DIR}"
+    exit 2
+fi
+
+if [[ "$1" = "" ]] ; then 
+    printf '\nERROR-3: first input, bitbake do_action not found!\n'
+    exit 3
+fi 
+
+N_LOOP=0
+while [[ "$1" != "" ]] ; 
 do 
+    N_LOOP=$((N_LOOP+1))
+# ====================================================
+    ${EXE_DIR}/asc reset yellow
+    printf '\n Loop #%d: ' ${N_LOOP} 
+    ${EXE_DIR}/asc green 
+    printf '%s' "$0"
+    ${EXE_DIR}/asc magenta
+    printf ' bitbake -c clean %s\n\n' "$1"
+    ${EXE_DIR}/asc reset 
+#
+
     bitbake -f -c clean $1
     if [ $? -ne 0 ] ; then 
-        printf '\nERROR-2: \"bitbake -f -c clean %s\" failed!\n' "$1"
-        exit 2
+        printf '\nERROR-5: \"bitbake -f -c clean %s\" failed!\n' "$1"
+        exit 5
     fi 
+# ---------------------------------------------------
     if [ -d "${WORK_PATH}/$1" ] ; then 
         pushd .
         cd ${WORK_PATH}/$1
         if [ $? -ne 0 ] ; then 
-            printf '\nERROR-3: \"cd %s\" failed!\n' "${WORK_PATH}/$1"
-            exit 3
+            printf '\nERROR-6: \"cd %s\" failed!\n' "${WORK_PATH}/$1"
+            exit 6
         fi 
         LS_RESULT="`ls -l`"
         if [ ! "${LS_RESULT}" = "total 0" ] ; then 
-            printf '\nERROR-4: folder %s not cleaned\n' "${WORK_PATH}/$1"
-            printf 'INFO-3:\n%s\n' "${LS_RESULT}"
-            exit 4
+            printf '\nERROR-7: folder %s not cleaned\n' "${WORK_PATH}/$1"
+            printf 'INFO-7:\n%s\n' "${LS_RESULT}"
+            exit 7
         fi       
         popd 
     else
-            printf '\nWARNING-5: Folder %s not found!\n' "${WORK_PATH}/$1"
+        printf '\nWARNING-8: Folder %s not found!\n' "${WORK_PATH}/$1"s
     fi 
+# =======================================================
+    ${EXE_DIR}/asc yellow
+    printf '\n Loop #%d: ' ${N_LOOP} 
+    ${EXE_DIR}/asc green 
+    printf '%s' "$0"
+    ${EXE_DIR}/asc magenta
+    printf ' bitbake %s\n\n[' "$1"
+    ${EXE_DIR}/asc reset
+#
+    bitbake $1
+    if [[ $? -ne 0 ]] ; then 
+	${EXE_DIR}/asc red
+        printf '\nERROR-9: \"bitbake %s\" failed!\n' "$1"
+	${EXE_DIR}/asc reset
+        exit 9
+    fi 
+# ====================================================
+    ${EXE_DIR}/asc green 
+    printf '\n##### '
+    ${EXE_DIR}/asc yellow
+    printf 'LOOP #%d: ' ${N_LOOP} 
+    ${EXE_DIR}/asc magenta
+    printf 'bitbake %s ' "$1"
+#
+    ${EXE_DIR}/asc green
+    printf 'completed without error #####\n'
+    ${EXE_DIR}/asc reset 
     shift 1
 done
 
