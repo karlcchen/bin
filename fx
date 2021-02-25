@@ -177,17 +177,25 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf ' \"%sgopt|-g=-w\"' '--'
     ${EXE_DIR}/asc green 
-    printf '%s append option \"-w" to env variable \"GREP_OPT\", used when calling grep command\n' ' -->' 
-# -g, how to delete old GREP_OPT and set new 
-    ${EXE_DIR}/asc yellow
-    printf '\t Example: \"-g\" \"%s\"' "-g=-Hw --color=auto"
+    printf '%s append option \"-w" to env variable GREP_OPT=' ' -->' 
+    ${EXE_DIR}/asc cyan
+    printf '\"%s\"' "${GREP_OPT}"
     ${EXE_DIR}/asc green 
-    printf '%s delete old and set new GREP_OPT=\"%s\"\n' ' -->' "-Hw --color=auto"
+    printf ', used by grep in this script\n' 
 # --newgopt, -ng, quick way to set complete new GREP_OPT
     ${EXE_DIR}/asc yellow
     printf " \"%snewgopt|-ng=%s\"" '--' "-Hw --color=auto"
     ${EXE_DIR}/asc green 
-    printf '%s directly overwrite new env variable GREP_OPT=\"%s"\n' ' -->' "-Hw --color=auto"
+    printf '%s temporarily change GREP_OPT=\"%s"\n' ' -->' "-Hw --color=auto"
+# example of -ng, how to delete old GREP_OPT and set new 
+    ${EXE_DIR}/asc green
+    printf ' Example:'
+    ${EXE_DIR}/asc yellow
+    printf ' -ng='
+    ${EXE_DIR}/asc cyan
+    printf '\"-Hw --color=auto\"'
+    ${EXE_DIR}/asc green 
+    printf ' %s temporarily change GREP_OPT=\"%s\"\n' ' -->' "-Hw --color=auto"
 # --not, -n, invert search match
     ${EXE_DIR}/asc yellow
     printf " \"%snot|-n=%s\"" '--' 
@@ -227,7 +235,7 @@ function this_usage() {
     printf " Example 2: only list files, if no search text specified\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s \'%s\' \n" "${EXE_BASE}" "*.c *.h" 
-    printf "\t %s \'%s\' \n" "${EXE_BASE}" "-bb" 
+    printf "\t %s %s \n" "${EXE_BASE}" "-bb" 
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green
@@ -235,7 +243,7 @@ function this_usage() {
     ${EXE_DIR}/asc yellow
     printf "\t %s %s \'%s\' \"%s\" \"%s\"\n" "${EXE_BASE}" "-fp=../" "*.c *.h" "Hello" "World"
     ${EXE_DIR}/asc green
-    printf "\t OR, same as last example, but run \"find\" onlY once for both patterns, using regular expression, grep option -E\n"
+    printf "\t OR, same as last example, but run \"find\" only once for both patterns, using regular expression, grep option -E\n"
     ${EXE_DIR}/asc yellow
     printf "\t %s %s \'%s\' \"%s\" \"%s\"\n" "${EXE_BASE}" "-fp=../" "--gopt=-E" "*.c *.h" "Hello|World"
     ${EXE_DIR}/asc green
@@ -243,21 +251,21 @@ function this_usage() {
     ${EXE_DIR}/asc green 
     printf " Example 4: append grep option -w, search \"word\" only:\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "-g=-w" "-bb" "DEVICETREE"
+    printf "\t %s %s %s \"%s\"\n" "${EXE_BASE}" "-bb" "-g=-w" "DEVICETREE"
     ${EXE_DIR}/asc green 
     printf " Example 4a: set grep env GREP_OPT=\"\", which is empty\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "-g" "-bb" "DEVICETREE"
+    printf "\t %s %s %s \"%s\"\n" "${EXE_BASE}" "-g" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc green 
     printf " Example 5: use find option: \"-maxepth 2\":\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n" "${EXE_BASE}" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
+    printf "\t %s %s %s \"%s\"\n" "${EXE_BASE}" "--fopt=-maxdepth 2" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
     printf "\t OR, use '-d2', a short form of '-maxdepth 2'\n"
     ${EXE_DIR}/asc yellow
-    printf "\t %s \"%s\" \'%s\' \"%s\"\n\n" "${EXE_BASE}" "-d2" "-bb" "DEVICETREE"
+    printf "\t %s %s %s \"%s\"\n\n" "${EXE_BASE}" "-d2" "-bb" "DEVICETREE"
     ${EXE_DIR}/asc green
 #
     ${EXE_DIR}/asc reset 
