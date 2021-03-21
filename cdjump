@@ -3,86 +3,113 @@
 # cdjump 
 #
 
-if [ "$1" = "--help" ] ; then 
-    this_usage
-    exit 1
+if [[ "$1" == "--help" ]] ; then 
+    printf '\n=== jump to a .repo directory ===\n"
+    printf 'Usage: source cdjump [repo_base_dir] [project_dir]
+    return 1
 fi 
 
 b_DEBUG=0
 b_VERBOSE=0
-if [ "$1" = "--verbose" ] ; then 
+if [[ "$1" == "--verbose" ]] ; then 
     b_VERBOSE=1
     shift 1
 fi 
-if [ "$1" = "--debug" ] ; then 
+if [[ "$1" == "--debug" ]] ; then 
     b_DEBUG=1
     b_VERBOSE=1
     shift 1
 fi 
 
-if [ "$1" = "" ] ; then 
-    printf "\nERROR: no input found for 1st argument: base directory\n"
-    return 1
-fi 
+GUESS_DIR="SonicCoreX"
+REPO_DIR=".repo"
+DEST_DIR="$1"
 
-# 2nd argument can be null
-#if [ "$2" = "" ] ; then 
-#    printf "\nWARNING: no input found for 2nd argument: destination directory\n"
-#fi 
-
-SONIC_CORE_X_DIR="$1"
-DEST_DIR="$2"
-
-##echo "DEBUG: #1 SONIC_CORE_X_DIR=${SONIC_CORE_X_DIR}"
-##echo "DEBUG: #2 DEST_DIR=${DEST_DIR}"
-
-if [ ! -d "${SONIC_CORE_X_DIR}" ] ; then 
-    #
-    # separate string to two parts by using "${SONIC_CORE_X_DIR}" as field separator 
-    PRJ_BASE="`pwd | awk -F \"${SONIC_CORE_X_DIR}\" '{print $1}'`"
-    if [ $? -ne 0 ] ; then
-        printf "\nERROR: pasering current path: \"%s\"\n" "`pwd`"
-        return 5
+b_BASE_DIR_found=0
+if [[ "${DEST_DIR}" == "" ]] ; then 
+    if [[ ! -d "${REPO_DIR}" ]] ; then 
+        if [[ -d "${GUESS_DIR}/${REPO_DIR}" ]] ; then 
+	    cd ${GUESS_DIR}
+       	    if [[ $? -ne 0 ]] ; then 
+     	        printf '\nERROR-04: cdjump, cd \"%s\" failed!\n' "${GUESS_DIR}"
+     	        printf 'PWD=%s\n' "$(pwd)"
+     	        return 4
+     	    fi 
+	    b_BASE_DIR_found=1
+	fi
     fi 
-
-    # for debug only
-    # printf "\nDEBUG INFO: found PROJECT_BASE=%s\n" "${PRJ_BASE}"
-    # 
-
-    cd ${PRJ_BASE}
-    if [ $? -ne 0 ] ; then
-        printf "\nERROR: cd to directory \"%s\" failed!\n" "${PRJ_BASE}" 
-        return 6 
-    fi 
-fi 
-
-if [ "${DEST_DIR}" = "" ] ; then 
-    return 0 
-fi 
-
-#
-if [ -d "${DEST_DIR}" ] ; then 
-#
-# if DEST_DIR has multiple paths, like "SonicCoreX/projects" 
-#
-##    echo "DEBUG: flow #2"
-##    echo "DEBUG: DEST_DIR=${DEST_DIR}"
-    cd ${DEST_DIR}
-    if [ $? -ne 0 ] ; then
-        printf "\nERROR: cd to directory \"%s\" failed!\n" "${DEST_DIR}" 
-        return 7 
-    fi 
-    return 0 
-else
-#
-# Note: we come here because "${SONIC_CORE_X_DIR}" could equal 
-# 
-##    echo "DEBUG: flow #3"
-
-#
-    printf "\nINFO: PWD=%s\n", "$(pwd)"
-    printf "DEBUG INFO: found PROJECT_BASE=%s, SonicCoreX=%s\n" "${PRJ_BASE}" ${SONIC_CORE_X_DIR}
-    printf "ERROR: cannot find dest directory: \"%s\"\n" "${DEST_DIR}"
-    return 10
+else 
+    if [[ -d "${DEST_DIR}/${REPO_DIR}" ]] ; then 
+        cd ${DEST_DIR}
+        if [[ $? -ne 0 ]] ; then
+            printf '\nERROR-11: cdjump, to directory \"%s\" failed!\n' "${DEST_DIR}" 
+            return 11 
+        fi 
+	b_BASE_DIR_found=1
+    elif [[ -d "${DEST_DIR}/${GUESS_DIR}/${REPO_DIR}" ]] ; then 
+        cd ${DEST_DIR}/${GUESS_DIR}
+        if [[ $? -ne 0 ]] ; then
+            printf '\nERROR-12: cdjump, to directory \"%s\" failed!\n' "${DEST_DIR}?${GUESS_DIR}" 
+            return 12 
+        fi 
+	b_BASE_DIR_found=1
+    elif [[ -d "../${DEST_DIR}/${REPO_DIR}" ]] ; then 
+	cd ../${DEST_DIR}
+        if [[ $? -ne 0 ]] ; then
+            printf '\nERROR-13: cdjump, to directory \"%s\" failed!\n' "../${DEST_DIR}" 
+            return 13 
+        fi 
+        b_BASE_DIR_found=1
+    fi
 fi
 
+if [[ ${b_BASE_DIR_found} -eq 0 ]] ; then 
+#
+# separate string to two parts by using "${GUESS_DIR}" as field separator 
+#
+    PRJ_BASE="`pwd | awk -F \"${GUESS_DIR}\" '{print $1}'`"
+    if [[ $? -ne 0 ]] ; then
+        printf '\nERROR-05: cdjump, pasering current path: \"%s\"\n' "`pwd`"
+        return 5
+    fi 
+#
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+        printf '\nDEBUG: cdjump, found PROJECT_BASE=\"%s\" from \"%s\"\n' "${PRJ_BASE}" "$(pwd)"
+    fi 
+#
+    if [[ -d "${PRJ_BASE}/${GUESS_DIR}" ]] ; then  
+	cd ${PRJ_BASE}/${GUESS_DIR}
+	if [[ $? -ne 0 ]] ; then
+	    printf '\nERROR-06: cdjump, to directory \"%s\" failed!\n' "${PRJ_BASE}/${GUESS_DIR}" 
+	    return 6 
+	fi 
+	if [[ ! -d "${REPO_DIR}" ]] ; then 
+            printf '\nERROR-07: cdjump, Cannot find %s under %s\n' "${REPO_DIR}" "$(pwd)"
+	    return 7 
+	fi 
+        b_BASE_DIR_found=1
+    else
+	printf '\nERROR-08: cdjump, PRJ_BASE_dir \"%s\" not found!\n' "${PRJ_BASE}/${GUESS_DIR}" 
+	printf 'PWD=%s\n' "$(pwd)"
+	return 8
+    fi
+fi
+
+if [[ "$2" != "" ]] ; then 
+    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+	printf 'DEBUG: project dir %s\n' "$2"
+    fi 
+    if [[ -d "$2" ]] ; then 
+
+	cd $2
+	if [[ $? -ne 0 ]] ; then 
+	    printf '\nERROR-18: cdjump, cd \"%s\" failed!\n' "$2"
+	    printf 'PWD=%s\n' "$(pwd)"
+	    return 18
+	fi 
+    else 
+        printf '\nERROR-19: cdjump, \"%s\" not found!\n' "$2"
+	printf 'PWD=%s\n' "$(pwd)"
+        return 19
+    fi
+fi 
