@@ -64,6 +64,11 @@ else
 fi
 
 if [[ ${b_BASE_DIR_found} -eq 0 ]] ; then 
+# 
+# no ".repo" dir found
+# try to guess base directory by searching ${GUESS_DIR} from current full pathname
+#
+
 #
 # separate string to two parts by using "${GUESS_DIR}" as field separator 
 #
