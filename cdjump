@@ -9,15 +9,15 @@ if [[ "$1" == "--help" ]] ; then
     return 1
 fi 
 
-b_DEBUG=0
-b_VERBOSE=0
+b_cdjump_DEBUG=0
+b_VERBOSE_cdjump=0
 if [[ "$1" == "--verbose" ]] ; then 
-    b_VERBOSE=1
+    b_VERBOSE_cdjump=1
     shift 1
 fi 
 if [[ "$1" == "--debug" ]] ; then 
-    b_DEBUG=1
-    b_VERBOSE=1
+    b_DEBUG_cdjump=1
+    b_VERBOSE_cdjump=1
     shift 1
 fi 
 
@@ -78,7 +78,7 @@ if [[ ${b_BASE_DIR_found} -eq 0 ]] ; then
         return 5
     fi 
 #
-    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+    if [[ ${b_DEBUG_cdjump} -ne 0 ]] ; then 
         printf '\nDEBUG: cdjump, found PROJECT_BASE=\"%s\" from \"%s\"\n' "${PRJ_BASE}" "$(pwd)"
     fi 
 #
@@ -101,7 +101,7 @@ if [[ ${b_BASE_DIR_found} -eq 0 ]] ; then
 fi
 
 if [[ "$2" != "" ]] ; then 
-    if [[ ${b_DEBUG} -ne 0 ]] ; then 
+    if [[ ${b_DEBUG_cdjump} -ne 0 ]] ; then 
 	printf 'DEBUG: project dir %s\n' "$2"
     fi 
     if [[ -d "$2" ]] ; then 
