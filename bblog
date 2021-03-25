@@ -6,62 +6,84 @@
 PRINT_ABS_PATH=0 
 WORK_PATH_ARM="build_output/work/aarch64-soniccorex-linux"
 WORK_PATH="build_output/work/corei7-64-soniccorex-linux"
+FIND_DIR="temp"
 
-if [ ! -d "${WORK_PATH}" ] ; then 
-    printf '\nERROR-1: base work path %s not found!\n' "${WORK_PATH}"
+if [[ ! -d "${WORK_PATH}" ]] ; then 
+    printf '\nERROR-01: %s: base work path %s not found!\n' "$0" "${WORK_PATH}"
     exit 1
 else 
     cd ${WORK_PATH}
+    if [[ $? -ne 0 ]] ; then 
+	printf '\nERROR-02: %s: cd %s failed\n' "$0" "${WORK_PATH}"
+	exit 2
+    fi 
 fi 
 
-if [ "$1" = "" ] ; then 
-    printf '\nERROR-2: no input for recipe work path!\n' 
-    printf '=== TAIL of start of work path: \"%s\"\n' "${WORK_PATH}"
+if [[ -z "$1" ]] ; then 
+    asc red
+    printf '\nERROR-03: %s: no PROJECT recipe specified!\n' "$0"
+    printf '\nINFO: latest projects from PATH= ' 
+    asc magenta
+    printf '\"%s\"\n' "$(pwd)"
+    asc green
     ls -ltr | tail 
-    exit 2   
+    asc reset
+    exit 3   
 fi 
 
-if [ ! -d "$1" ] ; then 
-    printf '\nERROR-3: work path %s not found! PWD=%s\n' "${1}" "$(pwd)"
-    exit 3
+if [[ ! -d "$1" ]] ; then 
+    printf '\nERROR-04: work path %s not found! PWD=%s\n' "${1}" "$(pwd)"
+    exit 4
 else 
     cd $1
 fi 
 
 # change find -ftype to d,  "temp" directory 
-LOG_PATH=`fx -t=d temp` 
+#LOG_PATH=`fx -t=d ${FIND_DIR}` 
+LOG_PATH="`find . -type d -name ${FIND_DIR}`" 
 N_DIR_FOUND="`echo ${LOG_PATH} | wc -l`"
-if [ ${N_DIR_FOUND} -ne 1 ] ; then 
-    printf '\nERROR-5: number of Dir \"%s\" found is not 1\n' "${LOG_DIR_NAME}"
+if [[ ${N_DIR_FOUND} -ne 1 ]] ; then 
+    printf '\nERROR-05: number of Dir \"%s\" found is not 1\n' "${LOG_DIR_NAME}"
     exit 5
 fi 
-if [ "${LOG_PATH}" = "" ] ; then 
-    printf 'ERROR-4: log file path not found!\n'
-    exit 4 
+if [[ -z "${LOG_PATH}" ]] ; then 
+    printf 'ERROR-06: %s: find DIR=\"%s\" at PATH=\"%s\" not found!\n' "$0" "${FIND_DIR}" "$(pwd)"
+    exit 6 
 else 
-    printf '\n grep path='
+    asc green
+    printf '\n build project %s path='
     asc magenta
     printf '%s' "$(pwd)" 
+    asc green
+    printf '\n LOG_PATH='
+    asc magenta
+    printf '%s' "${LOG_PATH}" 
     asc reset
-    if [ "$2" = "" ] ; then 
-	printf '\n'
-        printf '\nERROR-6: no input search string found!\n' 
-        exit 6
+    if [[ -z "$2" ]] ; then 
+        printf '\n\nERROR-07: %s: no search pattern specified!!\n' "$0"
+        exit 7
     fi
     printf ', grep pattern='
     asc magenta
     printf '\"%s\"\n' "$2"
     printf '\n' 
     asc reset 
-    if [ ${PRINT_ABS_PATH} -ne 0 ] ; then  
+    if [[ ${PRINT_ABS_PATH} -ne 0 ]] ; then  
         START_LOG_PATH="`realpath ${LOG_PATH}`"
     else
         START_LOG_PATH="${LOG_PATH}"
     fi 
     asc green 
-    printf 'INFO call fx with: '
+    printf 'INFO: call fx with: '
     asc yellow
-    printf 'fx -fp=%s -all \"%s\"\n' "${START_LOG_PATH}" "$2"
+    printf '\tfx -fp=%s -all \"%s\"\n' "${START_LOG_PATH}" "$2"
+#
     asc reset
+    if [[ ! -d "${START_LOG_PATH}" ]] ; then 
+	printf '\nERROR:-09: %s: START_LOG_PATH=\"%s\" Does not Exist!' "$0" "${START_LOG_PATH}"
+	exit 9 
+    fi 
     fx -fp=${START_LOG_PATH} -all "$2"
+
+#
 fi
