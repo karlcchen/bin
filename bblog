@@ -21,7 +21,7 @@ fi
 
 if [[ -z "$1" ]] ; then 
     asc red
-    printf '\nERROR-03: %s: no PROJECT recipe specified!\n' "$0"
+    printf '\nERROR-03: %s: No PROJECT recipe specified!\n' "$0"
     printf '\nINFO: latest projects from PATH= ' 
     asc magenta
     printf '\"%s\"\n' "$(pwd)"
@@ -32,7 +32,16 @@ if [[ -z "$1" ]] ; then
 fi 
 
 if [[ ! -d "$1" ]] ; then 
-    printf '\nERROR-04: work path %s not found! PWD=%s\n' "${1}" "$(pwd)"
+    asc red
+    printf '\nERROR-04: %s: RECIPE_PATH= ' "$0" 
+    asc magenta
+    printf '%s' "$1" 
+    asc green
+    printf ' not found!\n'
+    printf ' PWD= ' 
+    asc magenta
+    printf '%s\n' "$(pwd)" 
+    asc reset
     exit 4
 else 
     cd $1
@@ -60,7 +69,11 @@ else
     printf '%s' "${LOG_PATH}" 
     asc reset
     if [[ -z "$2" ]] ; then 
-        printf '\n\nERROR-07: %s: no search pattern specified!!\n' "$0"
+        asc red 
+        printf '\n\nERROR-07: %s:' "$0"
+        asc YELLOW
+        printf ' No search pattern specified!\n' 
+        asc reset
         exit 7
     fi
     printf ', grep pattern='
