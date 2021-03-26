@@ -56,6 +56,7 @@ function this_usage() {
 # needed for: fname '*.sh'
 set -f
 
+b_HELP=0
 b_DEBUG=0
 b_VERBOSE=0
 b_ABS_PATH=0
@@ -94,7 +95,7 @@ do
             printf "\nDEBUG-1: the #%d options parsed: #1=\"%s\", #2=\"%s\"\n" ${OPT_CNT} "${OPT_STR_1}" "${OPT_STR_2}"
         fi 
 #
-        if [[ "${OPT_STR_1}" = "--verbose" ]] ; then 
+        if [[ "${OPT_STR_1}" == "--verbose" ]] ; then 
             if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_VERBOSE=1
             else
@@ -103,7 +104,7 @@ do
             if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-1: set --verbose=%d, --debug=%d\n" ${b_VERBOSE} ${b_DEBUG}
             fi
-        elif [[ "${OPT_STR_1}" = "--debug" ]] ; then 
+        elif [[ "${OPT_STR_1}" == "--debug" ]] ; then 
             if [[ -z "${OPT_STR_2}" ]] ; then 
         	b_DEBUG=1
             else
@@ -129,13 +130,13 @@ do
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 FIND_TYPE="${OPT_STR_2}"
             fi
-        elif [[ "${OPT_STR_1}" = "--start" || "${OPT_STR_1}" == "-s" ]] ; then  
+        elif [[ "${OPT_STR_1}" == "--start" || "${OPT_STR_1}" == "-s" ]] ; then  
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 START_DIR="${OPT_STR_2}"
             else 
                 printf '\nWARNING: no value found for option --start/-s\n'  
             fi        
-        elif [[ "${OPT_STR_1}" = "--color" || "${OPT_STR_1}" == "-c" ]] ; then  
+        elif [[ "${OPT_STR_1}" == "--color" || "${OPT_STR_1}" == "-c" ]] ; then  
             if [[ ! -z "${OPT_STR_2}" ]] ; then 
                 s_COLOR="${OPT_STR_2}"
             else
@@ -188,8 +189,10 @@ do
             FIND_OPT1="-L"
         elif [[ "${OPT_STR_1}" == "--long" || "${OPT_STR_1}" == "-l"  || "${OPT_STR_1}" == "-ls" ]] ; then  
             b_LS_LONG=1
+        elif [[ "${OPT_STR_1}" == "--help" ]] ; then  
+            b_HELP=1
         #==============================================================================
-        elif [[ "${OPT_STR_1}" = "--optend" ]] ; then 
+        elif [[ "${OPT_STR_1}" == "--optend" ]] ; then 
 #
 # no more options and skip this option 
 #
@@ -220,6 +223,11 @@ do
     shift 1
 done 
 
+if [[ ${b_HELP} -ne 0 ]] ; then 
+    this_usage
+    exit 1
+fi 
+
 if [[ "${ARG_SAVED[0]}" == "" &&  "${FIND_PATTERN}" == "" ]] ; then 
     this_usage
     exit 1
@@ -228,9 +236,6 @@ fi
 FIND_SPEC="${ARG_SAVED[@]}"
 FIND_SPEC_BASENAME="`basename ${ARG_SAVED[0]}`"
 FIND_SPEC_DIRNAME="`dirname ${ARG_SAVED[0]}`"
-
-# restore GLOB
-    set +f
 
 if [[ ${b_DEBUG} -ne 0 ]] ; then 
     echo "FIND_SPEC=${FIND_SPEC}"
@@ -249,28 +254,42 @@ if [[ ${b_DEBUG} -ne 0 ]] ; then
 fi
 
 RESULT_LIST=""
-FOUND_LIST="`find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
-# printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
-if [[ $? -eq 0 ]] ; then 
-    if [[ ${b_DEBUG} -ne 0 ]] ; then 
-        printf '\n=== start of FOUND_LIST ===\n'
-        printf 'FOUND_LIST=\n%s\n' "${FOUND_LIST}"
-        printf '=== end of FOUND_LIST ===\n\n'
-    fi 
-    if [[ "${FOUND_LIST}" != "" ]] ; then 
-        if [[ ${b_ABS_PATH} -ne 0 ]] ; then  
+
+# restore GLOB
+    set +f
+if [[ ${b_DEBUG} -ne 0 ]] ; then 
+    printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}" 
+    asc reset yellow
 #
-# "--apath" || "-a" ]]
+    echo -e "find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} ${FIND_SPEC_BASENAME}"
 #
-            RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
-        else
-#
-# default 
-#
-            RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
-        fi
-    fi 
+    asc reset 
+    exit 1
+else
+    FOUND_LIST="`find ${FIND_OPT1} ${START_DIR} ${FIND_OPT_GLOBAL} -type ${FIND_TYPE} ${FIND_TEST_NOT} ${NAME_CASE} "${FIND_SPEC_BASENAME}"`" 
+    # printf '\n\nDEBUG: FOUND_LIST=%s\n\n' "${FOUND_LIST}"
+    if [[ $? -eq 0 ]] ; then 
+        if [[ ${b_DEBUG} -ne 0 ]] ; then 
+            printf '\n=== start of FOUND_LIST ===\n'
+            printf 'FOUND_LIST=\n%s\n' "${FOUND_LIST}"
+            printf '=== end of FOUND_LIST ===\n\n'
+        fi 
+        if [[ "${FOUND_LIST}" != "" ]] ; then 
+            if [[ ${b_ABS_PATH} -ne 0 ]] ; then  
+    #
+    # "--apath" || "-a" ]]
+    #
+                RESULT_LIST="`echo "${FOUND_LIST}" | xargs realpath | sort`"
+            else
+    #
+    # default 
+    #
+                RESULT_LIST="`echo "${FOUND_LIST}" | sort`"
+            fi
+        fi 
+    fi
 fi
+
 
 if [[ "${RESULT_LIST}" != "" ]] ; then 
 #
