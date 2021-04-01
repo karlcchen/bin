@@ -13,9 +13,18 @@ WORK_BASE_DIR="build_output/work"
 ARCH_DIR_ARM="aarch64-soniccorex-linux"
 ARCH_DIR_INTEL="corei7-64-soniccorex-linux"
 
-ping -c 1 ${GITLAB_SCX_SERVER}
+ping -c 1 ${GITLAB_SCX_SERVER} >/dev/null
 if [[ $? -ne 0 ]] ; then 
     printf '\nERROR-99: ping %s failed!\n' "${GITLAB_SCX_SERVER}"
+    exit 99
+fi 
+
+if [[ ! -d "${WORK_BASE_DIR}"  ]]; then 
+    ${EXE_DIR}/asc green
+    printf '\nERROR-1: Cannot find DIR' 
+    ${EXE_DIR}/asc magenta
+    printf '"%s"\n' "${WORK_BASE_DIR}" 
+    ${EXE_DIR}/asc reset
     exit 99
 fi 
 
@@ -44,7 +53,16 @@ elif [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"  ]]; then
     ${EXE_DIR}/asc reset
 #
 else
-    printf '\nERROR-2: Cannot find Build Working Architecture in DIR "%s"\n' "${WORK__BASE_DIR}"
+    ${EXE_DIR}/asc green
+    printf '\nERROR-2: Cannot find DIR: ' "${ARCH_DIR_ARM}" "${ARCH_DIR_INTEL}"
+    ${EXE_DIR}/asc magenta
+    printf '\"%s\" or \"%s\"\n' "${ARCH_DIR_ARM}" "${ARCH_DIR_INTEL}"
+    ${EXE_DIR}/asc green
+    printf ' under work DIR: "%s"\n'
+    printf '"%s"\n' "${WORK_BASE_DIR}"
+    ${EXE_DIR}/asc green
+    ls -l ${WORK_BASE_DIR}
+    ${EXE_DIR}/asc reset
     exit 2
 fi
 
