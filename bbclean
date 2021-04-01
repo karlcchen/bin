@@ -5,6 +5,7 @@
 
 GITLAB_SCX_SERVER=sonicgit
 
+ACTION_LIST="clean"
 EXE_DIR="$(realpath $(dirname $0))"
 EXE_BASENAME="`basename $0`"
 
@@ -34,7 +35,7 @@ elif [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"  ]]; then
     WORK_PATH="build_output/work/corei7-64-soniccorex-linux"
 #
     ${EXE_DIR}/asc magenta
-    printf '\n### INTEL X86_64 '
+    printf '\n### INTEL CORE-i7 X86_64'
     ${EXE_DIR}/asc green
     printf 'target cross build\n'
     printf 'Work DIR: '
@@ -55,39 +56,47 @@ fi
 N_LOOP=0
 while [[ "$1" != "" ]] ; 
 do 
+    BB_RECIPE="$1"
     N_LOOP=$((N_LOOP+1))
 # ====================================================
-    ${EXE_DIR}/asc reset yellow
-    printf '\n Loop #%d: ' ${N_LOOP} 
-    ${EXE_DIR}/asc green 
-    printf '%s' "$0"
-    ${EXE_DIR}/asc magenta
-    printf ' bitbake -c clean %s\n\n' "$1"
-    ${EXE_DIR}/asc reset 
-#
-
-    bitbake -f -c clean $1 | tee $1-clean.log
-    if [ $? -ne 0 ] ; then 
-        printf '\nERROR-5: \"bitbake -f -c clean %s\" failed!\n' "$1"
-        exit 5
-    fi 
-# ---------------------------------------------------
-    if [ -d "${WORK_PATH}/$1" ] ; then 
+    for c_action in ${ACTION_LIST}
+    do 
+        ${EXE_DIR}/asc reset yellow
+        printf '\n Loop #%d: ' ${N_LOOP} 
+        ${EXE_DIR}/asc green 
+        printf '%s' "$0"
+        ${EXE_DIR}/asc magenta
+        printf ' bitbake -c ' 
+        ${EXE_DIR}/asc cyan
+        printf '%s ' "${c_action}" 
+        ${EXE_DIR}/asc magenta
+        printf '%s\n\n' "${BB_RECIPE}"
+        ${EXE_DIR}/asc reset 
+    #
+        bitbake -f -c ${c_action} ${BB_RECIPE} | tee ${BB_RECIPE}-${c_action}.log
+	PIPE_STA="`echo "${PIPESTATUS[@]}"`"
+        if [[ "${PIPE_STA}" != "0 0" ]] ; then
+            printf '\nERROR-5: \"bitbake -f -c %s %s\" failed!\n' "${c_action}" "${BB_RECIPE}"
+            exit 5
+        fi
+    done  
+# ------------------------------------------------------------
+    if [ -d "${WORK_PATH}/${BB_RECIPE}" ] ; then 
         pushd .
-        cd ${WORK_PATH}/$1
+        cd ${WORK_PATH}/${BB_RECIPE}
         if [ $? -ne 0 ] ; then 
-            printf '\nERROR-6: \"cd %s\" failed!\n' "${WORK_PATH}/$1"
+            printf '\nERROR-6: \"cd %s\" failed!\n' "${WORK_PATH}/${BB_RECIPE}"
             exit 6
         fi 
         LS_RESULT="`ls -l`"
         if [ ! "${LS_RESULT}" = "total 0" ] ; then 
-            printf '\nERROR-7: folder %s not cleaned\n' "${WORK_PATH}/$1"
+            printf '\nERROR-7: folder %s not cleaned\n' "${WORK_PATH}/${BB_RECIPE}"
             printf 'INFO-7:\n%s\n' "${LS_RESULT}"
             exit 7
         fi       
         popd 
     else
-        printf '\nWARNING-8: Folder %s not found!\n' "${WORK_PATH}/$1"s
+        printf '\nWARNING-8: Folder %s not found!\n' "${WORK_PATH}/${BB_RECIPE}"
     fi 
 # =======================================================
     ${EXE_DIR}/asc yellow
@@ -95,13 +104,16 @@ do
     ${EXE_DIR}/asc green 
     printf '%s' "$0"
     ${EXE_DIR}/asc magenta
-    printf ' bitbake %s\n\n[' "$1"
+    printf ' bitbake ' 
+    ${EXE_DIR}/asc cyan
+    printf '%s\n\n' "${BB_RECIPE}"
     ${EXE_DIR}/asc reset
 #
-    bitbake $1 | tee $1.log
-    if [[ $? -ne 0 ]] ; then 
+    bitbake ${BB_RECIPE} | tee ${BB_RECIPE}.log
+    PIPE_STA="`echo "${PIPESTATUS[@]}"`"
+    if [[ "${PIPE_STA}" != "0 0" ]] ; then
 	${EXE_DIR}/asc red
-        printf '\nERROR-9: \"bitbake %s\" failed!\n' "$1"
+        printf '\nERROR-9: \"bitbake %s\" failed!\n' "${BB_RECIPE}"
 	${EXE_DIR}/asc reset
         exit 9
     fi 
@@ -111,7 +123,7 @@ do
     ${EXE_DIR}/asc yellow
     printf 'LOOP #%d: ' ${N_LOOP} 
     ${EXE_DIR}/asc magenta
-    printf 'bitbake %s ' "$1"
+    printf 'bitbake %s ' "${BB_RECIPE}"
 #
     ${EXE_DIR}/asc green
     printf 'completed without error #####\n'
