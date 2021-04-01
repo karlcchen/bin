@@ -5,7 +5,8 @@
 
 GITLAB_SCX_SERVER=sonicgit
 
-ACTION_LIST="clean"
+#ACTION_LIST="cleansstate cleanall"
+ACTION_LIST="cleanall"
 EXE_DIR="$(realpath $(dirname $0))"
 EXE_BASENAME="`basename $0`"
 
@@ -67,7 +68,7 @@ else
 fi
 
 if [[ "$1" = "" ]] ; then 
-    printf '\nERROR-3: first input, bitbake do_action not found!\n'
+    printf '\nERROR-3: %s: no argument found!\n' "${EXE_BASENAME}"
     exit 3
 fi 
 
@@ -94,28 +95,34 @@ do
         bitbake -f -c ${c_action} ${BB_RECIPE} | tee ${BB_RECIPE}-${c_action}.log
 	PIPE_STA="`echo "${PIPESTATUS[@]}"`"
         if [[ "${PIPE_STA}" != "0 0" ]] ; then
+      	    ${EXE_DIR}/asc RED
             printf '\nERROR-5: \"bitbake -f -c %s %s\" failed!\n' "${c_action}" "${BB_RECIPE}"
+            ${EXE_DIR}/asc reset
             exit 5
         fi
-    done  
 # ------------------------------------------------------------
-    if [ -d "${WORK_PATH}/${BB_RECIPE}" ] ; then 
-        pushd .
-        cd ${WORK_PATH}/${BB_RECIPE}
-        if [ $? -ne 0 ] ; then 
-            printf '\nERROR-6: \"cd %s\" failed!\n' "${WORK_PATH}/${BB_RECIPE}"
-            exit 6
+        if [ -d "${WORK_PATH}/${BB_RECIPE}" && "${c_action}" == "clean" ] ; then 
+            pushd .
+            cd ${WORK_PATH}/${BB_RECIPE}
+            if [ $? -ne 0 ] ; then
+                ${EXE_DIR}/asc RED 
+                printf '\nERROR-6: \"cd %s\" failed!\n' "${WORK_PATH}/${BB_RECIPE}"
+                ${EXE_DIR}/asc reset
+                exit 6
+            fi 
+            LS_RESULT="`ls -l`"
+            if [ ! "${LS_RESULT}" = "total 0" ] ; then 
+                ${EXE_DIR}/asc RED
+                printf '\nERROR-7: folder %s not cleaned\n' "${WORK_PATH}/${BB_RECIPE}"
+                printf ' INFO-7:\n %s\n\n' "${LS_RESULT}"
+    	        ${EXE_DIR}/asc reset
+                exit 7
+            fi       
+            popd 
+        else
+            printf '\nWARNING-8: Folder %s not found!\n' "${WORK_PATH}/${BB_RECIPE}"
         fi 
-        LS_RESULT="`ls -l`"
-        if [ ! "${LS_RESULT}" = "total 0" ] ; then 
-            printf '\nERROR-7: folder %s not cleaned\n' "${WORK_PATH}/${BB_RECIPE}"
-            printf 'INFO-7:\n%s\n' "${LS_RESULT}"
-            exit 7
-        fi       
-        popd 
-    else
-        printf '\nWARNING-8: Folder %s not found!\n' "${WORK_PATH}/${BB_RECIPE}"
-    fi 
+    done  
 # =======================================================
     ${EXE_DIR}/asc yellow
     printf '\n Loop #%d: ' ${N_LOOP} 
