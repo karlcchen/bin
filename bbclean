@@ -33,7 +33,7 @@ if [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_ARM}"  ]]; then
     WORK_PATH="build_output/work/aarch64-soniccorex-linux"
 #
     ${EXE_DIR}/asc magenta
-    printf '\n### ARM AARCH64 '
+    printf '\n### ARM AARCH64,'
     ${EXE_DIR}/asc green
     printf ' cross build\n'
     printf 'Work DIR: '
@@ -45,9 +45,9 @@ elif [[ -d "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"  ]]; then
     WORK_PATH="build_output/work/corei7-64-soniccorex-linux"
 #
     ${EXE_DIR}/asc magenta
-    printf '\n### INTEL CORE-i7 X86_64'
+    printf '\n### INTEL CORE-i7 X86_64,'
     ${EXE_DIR}/asc green
-    printf 'target cross build\n'
+    printf ' target cross build\n'
     printf 'Work DIR: '
     ${EXE_DIR}/asc magenta
     printf '%s' "${WORK_BASE_DIR}/${ARCH_DIR_INTEL}"
