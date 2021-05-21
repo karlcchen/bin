@@ -7,22 +7,22 @@ EXE_DIR="`dirname ${EXE_NAME}`"
 ASCII_ESC_SRC="${EXE_DIR}/ascii-esc.sh"
 
 if [ -f "${ASCII_ESC_SRC}" ] ; then  
-	source ${ASCII_ESC_SRC} 
+    source ${ASCII_ESC_SRC} 
 else 
-	printf "\nERROR1: %s cannot find %s\n" "${EXE_NAME}" "${ASCII_ESC_SRC}"
-	exit 1
+    printf "\nERROR1: %s cannot find %s\n" "${EXE_NAME}" "${ASCII_ESC_SRC}"
+    exit 1
 fi
 
 b_DEBUG=0
 b_VERBOSE=0
-if [ "$1" = "--verbose" ] ; then 
-	b_VERBOSE=1
-	shift 1
+if [[ "$1" == "--verbose" ]] ; then 
+    b_VERBOSE=1
+    shift 1
 fi 
-if [ "$1" = "--debug" ] ; then 
-	b_DEBUG=1
-	b_VERBOSE=1
-	shift 1
+if [[ "$1" == "--debug" ]] ; then 
+    b_DEBUG=1
+    b_VERBOSE=1
+    shift 1
 fi 
 
 CNT=1 
