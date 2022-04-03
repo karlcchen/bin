@@ -93,9 +93,12 @@ do
     elif [ "$1" = "reset" -o "$1" = "rst" ] ; then 
         printf "${AESC_RST_ALL}"
 #
-    elif [ "$1" = "test" -o "$1" = "demo" ] ; then 
+    elif [ "$1" = "help" -o "$1" = "--help" ] ; then 
 
-	printf "\n${AESC_COLOR_CYAN}=== ${AESC_COLOR_RED}%s ${AESC_COLOR_GREEN} test/demo ${AESC_COLOR_CYAN}===${AESC_RST_ALL}\n\n" "$0" 
+	printf "\n Usage:\n ${AESC_COLOR_CYAN}${AESC_COLOR_RED}%s ${AESC_COLOR_GREEN} ANSI colors Escape code utility ${AESC_COLOR_CYAN}${AESC_RST_ALL}\n" "$(basename $0)" 
+	printf "\n   Commands   Description:\n\n" 
+
+	printf "${AESC_COLOR_GREEN} %10s ${AESC_RST_ALL} %10s\n" "help" "display help messages" 
         printf "${AESC_RST_ALL} %10s\n" "reset/rst"
         printf "${AESC_SET_BOLD} %10s ${AESC_SET_NORM} %10s\n" "bold" "normal"
         printf "${AESC_SET_D_UNDERLINED} %10s ${AESC_RST_ALL} %10s\n" "dual_uline" "reset"
@@ -130,7 +133,11 @@ do
         printf "${AESC_COLOR_WHITE} %10s ${AESC_COLOR_RST_FG} %10s\n" "white" "rst_fg"
 
         printf "${AESC_RST_ALL} %10s\n" "reset/rst"
-	echo
+
+	printf "\n Examples:\n"
+	printf " > asc blink ${AESC_SET_BLINK}${AESC_COLOR_L_RED}RED${AESC_RST_ALL}\t# set text dsiplay with ANSI color RED with blinking\n"
+	printf " > asc reset\t\t# reset ANSI color to normal\n"
+	echo 
     else
 	if [ ${b_VERBOSE} -ne 0 ] ; then  
 		printf "\nERROR1: %s unknown command #%d: \"%s\"\n" "${EXE_NAME}" ${CNT} "$1"
