@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+
+while [[ "$1" != "" ]] 
+do 
+    FILES="`find . -type f -name "${1}"`"
+    if [[ "${FILES}" != "" ]] ; then   
+	find . -type f -name "${1}" | xargs sed -i 's/[ \t]*$//' 
+    fi
+    shift 1
+done
