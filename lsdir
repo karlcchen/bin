@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+
+if [[ $# == 0 ]]; then 
+    ls -l | grep '^d' | awk '{print $9}'
+elif [[ "$1" == "-l" ]]; then 
+    ls -l | grep '^d' 
+else
+    ls -l $1 | grep '^d' 
+fi
+
+
