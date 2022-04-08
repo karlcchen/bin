@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# wait a file size has not been changed for a minute or two
+#
+
+s_VERSION="1.0"
+
+EXE_NAME="`realpath $0`"
+EXE_BASE="`basename ${EXE_NAME}`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+N_DELAY_SEC=30
+
+function this_usage() {
+    printf '\n wait until file size not change for %d seconds, then optionally execute commands. Version:%s\n' ${N_DELAY_SEC} "${s_VERSION}"
+    printf " Usage:\n\t %s\t file_name [Comamnds_to_be_excuated]\n" "${EXE_BASE}"
+    printf " Example:\n\t %s ~/File1.tar  tar cf ~/File2.tar ./Dir1\n" "${EXE_BASE}"
+}
+
+if [[ $# -eq 0 ]]; then
+    this_usage
+    exit 1
+fi
+
+if [[ ! -z "$1" ]]
+then
+    if [[ ! -f "$1" ]]; then
+        printf '\nERROR-01: file %s not found!\n' "$1"
+        exit 2
+    fi
+    while [[ 1 ]]
+    do
+        FSIZE1="`stat -c %s $1`"
+        if [[ $? -ne 0 ]]; then
+            printf '\nERROR-02a: CMD: \"stst -c %s $1\" failed!\n' "$1"
+            exit 3
+        fi
+        sleep ${N_DELAY_SEC}
+        FSIZE2="`stat -c %s $1`"
+        if [[ $? -ne 0 ]]; then
+            printf '\nERROR-02b: CMD: \"stst -c %s $1\" failed!\n' "$1"
+            exit 3
+        fi
+
+        if [[ ${FSIZE1} -ne ${FSIZE2} ]]; then
+            printf '.'
+        else
+            printf '\n'
+            break
+        fi
+    done
+    shift 1
+fi
+
+if [[ ! -z "$1" ]]; then
+
+    $*
+    if [[ $? -ne 0 ]]; then
+        printf '\nERROR-02: \n'
+        exit 3
+    fi
+fi
+

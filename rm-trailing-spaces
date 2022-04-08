@@ -1,11 +1,13 @@
 #!/bin/bash
 #
 
-while [[ "$1" != "" ]] 
-do 
-    FILES="`find . -type f -name "${1}"`"
-    if [[ "${FILES}" != "" ]] ; then   
-	find . -type f -name "${1}" | xargs sed -i 's/[ \t]*$//' 
+FIND_OPT="-maxdepth 1 -type f"
+
+while [[ "$1" != "" ]]
+do
+    FILES="`find . ${FIND_OPT} -name "${1}"`"
+    if [[ "${FILES}" != "" ]] ; then
+	find . ${FIND_OPT} -name "${1}" | xargs sed -i 's/[ \t]*$//'
     fi
     shift 1
 done
