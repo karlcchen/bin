@@ -3,6 +3,8 @@
 # wait a file size has not been changed for a minute or two
 #
 
+DEBUG_CTL=0
+
 s_VERSION="1.0"
 
 EXE_NAME="`realpath $0`"
