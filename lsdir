@@ -1,12 +1,82 @@
 #!/bin/bash
 #
 
-if [[ $# == 0 ]]; then 
-    ls -l | grep '^d' | awk '{print $9}'
-elif [[ "$1" == "-l" ]]; then 
-    ls -l | grep '^d' 
-else
-    ls -l $1 | grep '^d' 
+s_VERSION="1.0"
+
+EXE_NAME="`realpath $0`"
+EXE_BASE="`basename ${EXE_NAME}`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+
+DEBUG_CTL=0
+
+LS_DIR="."
+LS_OPT="-l"
+
+sta_LS_AWK_PRINTT_9=1
+sta_ONLY_HIDDEN=0
+
+function this_usage() {
+    printf '\n List Directory (Only) Version:%s\n' "${s_VERSION}"
+    printf ' Usage:\n\t %s\t [DIR_PATH] [Options]\n' "${EXE_BASE}"
+    printf ' Options:\n'
+    printf '\t --hidden|-h  : list hiddne files only\n'
+    printf '\t --verbose|-v : list verbose files info\n'
+    printf '\t --help       : display this help messages\n'
+    printf '\n Example:\n'
+    printf '\t %s -h -v  : list current dir, hidden dir only, verbose file info\n' "${EXE_BASE}"
+    printf '\t %s ..     : list .. directory, names only\n' "${EXE_BASE}"
+}
+
+while [[ $1 != "" ]]
+do 
+    if [[ -d "$1" ]]; then 
+        LS_DIR="$1"
+    elif [[ "$1" == "--verbose" || "$1" == "-v" ]]; then 
+        sta_LS_AWK_PRINTT_9=0
+    elif [[ "$1" == "--hidden" || "$1" == "-h" ]]; then 
+        sta_ONLY_HIDDEN=1
+        LS_OPT="${LS_OPT} -a" 
+    elif [[ "$1" == "--help" ]]; then 
+        this_usage
+    elif [[ "$1" == "--debug" ]]; then 
+        DEBUG_CTL=1
+    else
+        LS_OPT="${LS_OPT} $1" 
+    fi 
+    shift 1
+done
+
+#if [[ $# != 0 ]]; then 
+#    ls -l ${LS_DIR} | grep '^d' | awk '{print $9}'
+#elif [[ "$1" == "-l" ]]; then 
+#    ls -l ${LS_DIR} | grep '^d' 
+#else
+#    ls -l $1 | grep '^d' 
+#fi
+if [[ ${DEBUG_CTL} -ne 0 ]]; then 
+    printf ' LS_DIR=%s\n' "${LS_DIR}"
+    printf ' LS_OPT=%s\n'  "${LS_OPT}"
 fi
 
-
+if [[ $sta_LS_AWK_PRINTT_9 -ne 0 ]]; then 
+# only print colume 9 of "ls -l" 
+    LIST="`ls ${LS_OPT} ${LS_DIR} | grep '^d' | awk '{print $9}'`"
+    if [[ ${sta_ONLY_HIDDEN} -ne 0 ]]; then 
+# only print dirs name starting with "."
+# remove first two lines, which are "." and ".."
+        printf '%s' "${LIST}" | grep "^\." | tail -n +3
+    else
+        printf '%s' "${LIST}"
+    fi
+else
+# verbose output, do not remove other columns  
+    LIST="`ls ${LS_OPT} ${LS_DIR} | grep '^d'`" 
+    if [[ ${sta_ONLY_HIDDEN} -ne 0 ]]; then 
+# only print dirs name starting with "."
+# remove first two lines, which are "." and ".."
+#        printf '%s\n' "${LIST}" | awk '$9 ~ /^[.]/' 
+        printf '%s' "${LIST}" | awk '$9 ~ /^[.*]/' | tail -n +3
+    else
+        printf '%s' "${LIST}"
+    fi
+fi
