@@ -121,4 +121,6 @@ else
     fi
 fi
 
-printf '\n' 
+if [[ "$LIST" != "" ]]; then 
+    printf '\n' 
+fi
