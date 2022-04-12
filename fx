@@ -629,31 +629,35 @@ if [[ ${b_DEBUG} -ne 0 ]] ; then
         LOOP=$((LOOP+1))
     done
     printf '====================================================================\n'
-    printf 'DEBUG-3: FIND_PATTERN=\"%s\"\n\n" "${FIND_PATTERN}'
-    printf '\n'
+    printf 'DEBUG-3: FIND_PATTERN=\"%s\"\n\n' "${FIND_PATTERN}"
 fi
 
 #
 name_patterns=()
 N_NAME_PATTERN=0
 if [[ "${FIND_PATTERN}" == "*" || "${FIND_PATTERN}" == "." ]] ; then
-#if [[ "${FIND_PATTERN}" == "*" ]] ; then
-    name_patterns+=(-o ${FIND_NAME} '*')
+    name_patterns+=(-o ${FIND_NAME} "*")
     name_patterns=("${name_patterns[@]:1}")
+    FIND_PATH="${FIND_PATTERN}"
     if [[ ${b_DEBUG} -ne 0 ]] ; then
-        printf "\nINFO-30: search all files %s\n" "${FIND_PATTERN}"
+        printf "\nDEBUG-03a: search ALL files \'%s %s\'\n" "${name_patterns[@]}"
     fi
     N_NAME_PATTERN=$((N_NAME_PATTERN+1))
 else
     for pattern in ${FIND_PATTERN}
     do
         if [[ ${b_DEBUG} -ne 0 ]] ; then
-            printf "### INFO-31: search files #%s: \"%s\"\n" "${LOOP}" "$pattern"
+            printf "### DEBUG-03b: search files #%s: \"%s\"\n" "${LOOP}" "$pattern"
         fi
         name_patterns+=(-o ${FIND_NAME} "${pattern}")
         N_NAME_PATTERN=$((N_NAME_PATTERN+1))
     done
     name_patterns=("${name_patterns[@]:1}")
+fi
+
+
+if [[ ${b_DEBUG} -ne 0 ]] ; then
+    printf 'DEBUG-4: FIND_PATH=\"%s\"\n' "${FIND_PATH}"
 fi
 
 if [[ ${b_GLOB_ON} -ne 0 && ${b_GLOB_restore} -ne 0 ]] ; then
