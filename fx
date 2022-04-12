@@ -2,13 +2,17 @@
 #
 # fx - find and grep 
 #
-
-s_VERSION="1.2"
+# 
+# 4/11/2022: add option: "-t=x" 
+#            change "--gexe|-ge=xxxx" to "--egrep[=xxxx]"
+#
+s_VERSION="1.3"
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 
-#GREP_EXE="fgrep"
+EGREP_EXE="egrep"
+FGREP_EXE="fgrep"
 # Note: fgrep doesn't not take "-E" for pattern "XXX|YYY"
 GREP_EXE="grep"
 # -E use Extended regular expression 
@@ -41,7 +45,7 @@ FIND_NAME_LIST="-name -iname -lname -ilname"
 FIND_PATH='*'
 
 FIND_TYPE="-type f"
-FIND_TYPE_LIST="f l d b c p s D"
+FIND_TYPE_LIST="f l d b c p s D x"
 # default main option of find, must appeared before the first search path
 # default is "-P", other options are : -L -H -Olevel
 FIND_HEAD_OPT=""
@@ -125,6 +129,7 @@ function this_usage() {
 #                     links when -L is in effect, use -xtype.
 #              s      socket
 #              D      door (Solaris)
+#              x      is the same as "-type-f -executable"   
 #
     printf "%s" "${FIND_TYPE_LIST}"
     ${EXE_DIR}/asc green
@@ -201,11 +206,11 @@ function this_usage() {
     printf " \"%snot|-n=%s\"" '--' 
     ${EXE_DIR}/asc green 
     printf '%s invert search match\n' ' -->' 
-# --gexe, -ge
+# --egrep
     ${EXE_DIR}/asc yellow
-    printf " \"%sgexe|-ge=egrep\"" "--"
+    printf " \"%segrep[=xxx]\"" "--"
     ${EXE_DIR}/asc green 
-    printf "%s  change default \"%s\" command to \"%s\"\n" ' -->' "${GREP_EXE}" "egrep"
+    printf "%s  change default \"%s\" command to default %s OR to \"%s\"\n" ' -->' "${GREP_EXE}" "${EGREP_EXE}" "xxx"
 # --optend
     ${EXE_DIR}/asc yellow
     printf " \"%soptend\"" '--'
@@ -403,7 +408,11 @@ do
                 fi
                 FIND_TYPE=""
             else
-                FIND_TYPE="-type ${OPT_STR_2}" 
+                if [[ "${OPT_STR_2}" == "x" ]]; then 
+                    FIND_TYPE="${FIND_TYPE} -executable"
+                else
+                    FIND_TYPE="-type ${OPT_STR_2}" 
+                fi
             fi
             if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-4: find type changed to: \"%s\"\n" "${FIND_TYPE}"
@@ -501,17 +510,17 @@ do
             if [[ ${b_DEBUG} -ne 0 ]] ; then 
                 printf "\nINFO-9: grep options changed to: \"%s\"\n" "${GREP_OPT}"
             fi 
-# --gexe, -ge
-        elif [[ "${OPT_STR_1}" == "--gexe" || "${OPT_STR_1}" == "-ge" ]] ; then 
+# --egrep 
+        elif [[ "${OPT_STR_1}" == "--egrep" ]] ; then 
             if [[ -z "${OPT_STR_2}" ]] ; then 
-                if [[ ${b_DEBUG} -ne 0 ]] ; then 
-                    printf "\nERROR-3: --gexe options cannot be empty!\n"
-                fi
+            # default to using "${EGREP_EXE}" command
+                GREP_EXE="${EGREP_EXE}"
             else
-                GREP_EXE="${OPT_STR_2}" 
+            # user assigned grep command
+                GREP_EXE="${OPT_STR_2}"  
             fi
             if [[ ${b_DEBUG} -ne 0 ]] ; then 
-                printf "\nINFO-10: grep exe command changed to: \"%s\"\n" "${GREP_EXE}"
+                printf "\nINFO-10: --egrep=\"%s\"\n" "${GREP_EXE}"
             fi 
 # --depth -d[=n] -dn
 # set search depth 
