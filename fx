@@ -6,7 +6,10 @@
 # 4/11/2022: add option: "-t=x"
 #            change "--gexe|-ge=xxxx" to "--egrep[=xxxx]"
 #
-s_VERSION="1.3"
+# 4/11/2022: fix problem of command: fx '.'
+#            it should behave the same as fx '*'
+#
+s_VERSION="1.4"
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
@@ -633,7 +636,7 @@ fi
 #
 name_patterns=()
 N_NAME_PATTERN=0
-if [[ "${FIND_PATTERN}" == "*" ]] ; then
+if [[ "${FIND_PATTERN}" == "*" || "${FIND_PATTERN}" == "." ]] ; then
 #if [[ "${FIND_PATTERN}" == "*" ]] ; then
     name_patterns+=(-o ${FIND_NAME} '*')
     name_patterns=("${name_patterns[@]:1}")
@@ -675,7 +678,7 @@ if [[ -z "${ARG_SAVED[${NEXT_ARG_IDX}]}" ]] ; then
         printf "\n### DEBUG-no-grep: find, FIND_OPT=\"%s\", GREP_OPT=\"%s\"\n\n" "${FIND_OPT}" "${GREP_OPT}"
         ${EXE_DIR}/asc reset yellow
         if [[ ${b_find_exclude_git} -ne 0 ]] ; then
-            echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) -not -path '*/.git*' ${FIND_TAIL_OPT}\n"
+            echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT}\n"
         else
             echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT}\n"
         fi
@@ -706,7 +709,7 @@ else
             if [[ ${b_find_exclude_git} -ne 0 ]] ; then
                 echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) -not -path '*/.git*' ${FIND_TAIL_OPT} -print0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} ${GREP_TEXT}\n\n"
             else
-	        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( ${name_patterns[@]} \) ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"
+	        echo -e "\t ${FIND_EXE} ${FIND_HEAD_OPT} ${FIND_PATH} ${FIND_OPT} ${FIND_TYPE} ${FIND_TEST_NOT} \( "${name_patterns[@]}" \) ${FIND_TAIL_OPT} -print 0 | ${XARGS_EXE} --null ${XARGS_OPT} ${GREP_EXE} ${GREP_OPT} \"${GREP_TEXT}\"\n\n"
             fi
             ${EXE_DIR}/asc reset
     	else
