@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+
+s_VERSION="1.6"
+EXE_NAME="`realpath $0`"
+EXE_BASE="`basename ${EXE_NAME}`"
+EXE_DIR="`dirname ${EXE_NAME}`"
+b_VERBOSE=0
+b_DEBUG=0
+
+COLOR="${EXE_DIR}/asc"
+
+LOOPS=0
+while read line
+do
+    pushd .
+    ${COLOR} CYAN
+    printf '\n=========================== '
+    ${COLOR} YELLOW
+    printf ' %d: \"%s\" ' ${LOOPS} "${line}"
+    ${COLOR} CYAN
+    printf ' =========================================\n' 
+    ${COLOR} reset
+    if [[ ${line} == "" ]]; then 
+	break;
+    fi 
+    if [[ -x "${line}" ]]; then 
+	DIR_NAME="`dirname ${line}`"
+	CMD_NAME="`basename ${line}`"
+	if [[ "${DIR_NAME}" != "" ]]; then 
+	    cd ${DIR_NAME}
+	    if [[ $? -ne 0 ]]; then 
+	        printf '\nERROR-01: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "{DIR_NAME}"
+		break 
+	    fi 
+	fi 
+	if [[ "${CMD_NAME}" != "" ]]; then 
+	    ./${CMD_NAME}
+   	    if [[ $? -ne 0 ]]; then 
+	        printf '\nERROR-02: LOOPS=%d: Run \"./%s\" failed!\n' ${LOOPS} "{CMD_NAME}"
+		break 
+	    fi 
+	    let LOOPS+=1
+	else
+	    printf '\nERROR-03: LOOPS=%d: Empty filename!\n' ${LOOPS} "{CMD_NAME}"
+	    break 
+	fi 
+    else 
+	${line}
+	if [[ $? -ne 0 ]]; then 
+	    printf '\nERROR-04: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "{line}"
+	    break 
+	fi 
+	let LOOPS+=1
+    fi 
+    popd 
+done < "${1:-/dev/stdin}"
+#
+${COLOR} GREEN
+printf '\n Number of CMDs executaed:'
+${COLOR} YELLOW
+printf ' %d\n' ${LOOPS}
+${COLOR} reset
+
+
+
