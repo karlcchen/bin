@@ -30,25 +30,25 @@ do
 	if [[ "${DIR_NAME}" != "" ]]; then 
 	    cd ${DIR_NAME}
 	    if [[ $? -ne 0 ]]; then 
-	        printf '\nERROR-01: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "{DIR_NAME}"
+	        printf '\nERROR-01: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "${DIR_NAME}"
 		break 
 	    fi 
 	fi 
 	if [[ "${CMD_NAME}" != "" ]]; then 
 	    ./${CMD_NAME}
    	    if [[ $? -ne 0 ]]; then 
-	        printf '\nERROR-02: LOOPS=%d: Run \"./%s\" failed!\n' ${LOOPS} "{CMD_NAME}"
+	        printf '\nERROR-02: LOOPS=%d: Run \"./%s\" failed!\n' ${LOOPS} "${CMD_NAME}"
 		break 
 	    fi 
 	    let LOOPS+=1
 	else
-	    printf '\nERROR-03: LOOPS=%d: Empty filename!\n' ${LOOPS} "{CMD_NAME}"
+	    printf '\nERROR-03: LOOPS=%d: Got empty basename \"%s\" from input \"%s\"\n' ${LOOPS} "${CMD_NAME}" "${line}"
 	    break 
 	fi 
     else 
 	${line}
 	if [[ $? -ne 0 ]]; then 
-	    printf '\nERROR-04: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "{line}"
+	    printf '\nERROR-04: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "${line}"
 	    break 
 	fi 
 	let LOOPS+=1
