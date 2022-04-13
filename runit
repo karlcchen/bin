@@ -10,57 +10,95 @@ b_DEBUG=0
 
 COLOR="${EXE_DIR}/asc"
 
-LOOPS=0
+SKIP_LINES=0
+if [[ "$1" != "" ]]; then 
+#    if [[ "$1" =~ "^[0-9]+$" ]]; then 
+        SKIP_LINES="$1"
+#    fi 
+    shift 1 
+fi
+
+N_ERROR=0
+N_LINES=0
 while read line
 do
-    pushd .
-    ${COLOR} CYAN
-    printf '\n=========================== '
-    ${COLOR} YELLOW
-    printf ' %d: \"%s\" ' ${LOOPS} "${line}"
-    ${COLOR} CYAN
-    printf ' =========================================\n' 
-    ${COLOR} reset
-    if [[ ${line} == "" ]]; then 
-	break;
+    let N_LINES+=1
+    if [[ ${N_LINES} -gt ${SKIP_LINES} ]]; then
+        ${COLOR} CYAN
+        printf '\n=========================== '
+        ${COLOR} YELLOW
+        printf ' %d: \"%s\" ' ${N_LINES} "${line}"
+        ${COLOR} CYAN
+        printf ' =========================================\n' 
+        ${COLOR} reset
+        if [[ ${line} == "" ]]; then 
+		break;
+        fi 
+        if [[ -x "${line}" ]]; then 
+                pushd . >/dev/null
+        	DIR_NAME="`dirname ${line}`"
+        	CMD_NAME="`basename ${line}`"
+        	if [[ "${DIR_NAME}" != "" ]]; then 
+        	    cd ${DIR_NAME}
+        	    if [[ $? -ne 0 ]]; then 
+        	        printf '\nERROR-01: N_LINES=%d: \"cd %s\" failed!\n' ${N_LINES} "${DIR_NAME}"
+        		let N_ERROR+=1
+        	    fi 
+        	fi 
+        	if [[ "${CMD_NAME}" != "" ]]; then 
+#        	    bash -c ./${CMD_NAME}
+	       	    time ./${CMD_NAME}
+           	    if [[ $? -ne 0 ]]; then 
+                        ${COLOR} GREEN
+        	        printf '\nERROR-02: N_LINES=%d: Path:' ${N_LINES} 
+                        ${COLOR} CYAN
+                        printf '\"%s\"' "${DIR_NAME}"
+                        ${COLOR} GREEN
+                        printf ' Run '
+                        ${COLOR} RED
+                        printf '\"./%s\"' "${CMD_NAME}"
+                        ${COLOR} GREEN
+                        printf ' failed!\n'
+                        ${COLOR} reset
+        		let N_ERROR+=1
+        	    fi 
+        	else
+        	    printf '\nERROR-03: N_LINES=%d: Got empty basename \"%s\" from input \"%s\"\n' ${N_LINES} "${CMD_NAME}" "${line}"
+        	    let N_ERROR+=1
+        	fi 
+                popd >/dev/null
+        else 
+        	${line}
+        	if [[ $? -ne 0 ]]; then 
+        	    printf '\nERROR-04: N_LINES=%d: \"cd %s\" failed!\n' ${N_LINES} "${line}"
+        	    let N_ERROR+=1
+        	fi 
+        fi 
+    else
+	${COLOR} RED
+	printf ' %4d: SKIP: \"%s\"\n' ${N_LINES} "${line}"
+	${COLOR} reset
+    fi
+    if [[ ${N_ERROR} -ne 0 ]]; then 
+        break
     fi 
-    if [[ -x "${line}" ]]; then 
-	DIR_NAME="`dirname ${line}`"
-	CMD_NAME="`basename ${line}`"
-	if [[ "${DIR_NAME}" != "" ]]; then 
-	    cd ${DIR_NAME}
-	    if [[ $? -ne 0 ]]; then 
-	        printf '\nERROR-01: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "${DIR_NAME}"
-		break 
-	    fi 
-	fi 
-	if [[ "${CMD_NAME}" != "" ]]; then 
-	    ./${CMD_NAME}
-   	    if [[ $? -ne 0 ]]; then 
-	        printf '\nERROR-02: LOOPS=%d: Run \"./%s\" failed!\n' ${LOOPS} "${CMD_NAME}"
-		break 
-	    fi 
-	    let LOOPS+=1
-	else
-	    printf '\nERROR-03: LOOPS=%d: Got empty basename \"%s\" from input \"%s\"\n' ${LOOPS} "${CMD_NAME}" "${line}"
-	    break 
-	fi 
-    else 
-	${line}
-	if [[ $? -ne 0 ]]; then 
-	    printf '\nERROR-04: LOOPS=%d: \"cd %s\" failed!\n' ${LOOPS} "${line}"
-	    break 
-	fi 
-	let LOOPS+=1
-    fi 
-    popd 
 done < "${1:-/dev/stdin}"
 #
 ${COLOR} GREEN
-printf '\n Number of CMDs executaed:'
+if [[ ${SKIP_LINES} -ne 0 ]]; then 
+    printf '\nNumber of lines skipped: '
+    ${COLOR} YELLOW
+    printf '%d\n' ${SKIP_LINES}
+fi
+${COLOR} GREEN
+printf 'Number of lines processed: '
 ${COLOR} YELLOW
-printf ' %d\n' ${LOOPS}
+printf '%d\n' ${N_LINES}
+
+if [[ ${N_ERROR} -ne 0 ]]; then 
+    ${COLOR} RED
+    printf 'ERROR-99: Number of Errors: %d\n' ${N_ERROR}
+fi 
 ${COLOR} reset
-
-
+exit ${N_ERROR}
 
