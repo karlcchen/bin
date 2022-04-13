@@ -27,7 +27,7 @@ function this_usage() {
     printf '\t --hidden|-h  : list hiddne files only\n'
     printf '\t --long|-l    : list verbose/long files info\n'
     printf '\t --invert|-v  : invert grep file type of its internal \"ls -l\" output\n'
-    printf '\p --pass|-p    : pass all unknow options to ls command, otherwise these are regarded as errors\n'
+    printf '\t --pass|-p    : pass all unknow options to ls command, otherwise these are regarded as errors\n'
     printf '\t --help       : display this help messages\n'
     printf '\n Example:\n'
     printf '\t %s -h -l  : list current dir, hidden dir only, verbose file info\n' "${EXE_BASE}"
