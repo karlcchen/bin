@@ -6,6 +6,7 @@ EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 START_LINE_MIN="1"
+CMD_BLK_BORDER="============================"
 b_VERBOSE=0
 b_DEBUG=0
 
@@ -33,11 +34,12 @@ do
     let N_LINES+=1
     if [[ ${N_LINES} -ge ${START_LINE} ]]; then
         ${COLOR} CYAN
-        printf '\n=========================== '
+        printf '\n%s ' "${CMD_BLK_BORDER}"
+        printf ' %4d: Run ' ${N_LINES} 
         ${COLOR} YELLOW
-        printf ' %d: \"%s\" ' ${N_LINES} "${line}"
+        printf '\"%s\" ' "${line}"
         ${COLOR} CYAN
-        printf ' =========================================\n' 
+        printf ' %s\n' "${CMD_BLK_BORDER}"
         ${COLOR} reset
         if [[ ${line} == "" ]]; then 
 		break;
@@ -45,6 +47,7 @@ do
         if [[ -x "${line}" ]]; then 
                 pushd . >/dev/null
         	DIR_NAME="`dirname ${line}`"
+                FULL_DIR_NAME="`realpath ${DIR_NAME}`"
         	CMD_NAME="`basename ${line}`"
         	if [[ "${DIR_NAME}" != "" ]]; then 
         	    cd ${DIR_NAME}
@@ -57,12 +60,12 @@ do
 #        	    bash -c ./${CMD_NAME}
 	       	    time ./${CMD_NAME}
            	    if [[ $? -ne 0 ]]; then 
-                        ${COLOR} GREEN
-        	        printf '\nERROR-02: N_LINES=%d: Path:' ${N_LINES} 
+                        ${COLOR} RED
+        	        printf '\nERROR-02: CMD Dir Path: '
+                        ${COLOR} YELLOW
+                        printf '\"%s\"\n' "${FULL_DIR_NAME}"
                         ${COLOR} CYAN
-                        printf '\"%s\"' "${DIR_NAME}"
-                        ${COLOR} GREEN
-                        printf ' Run '
+                        printf ' %4d: Run ' ${N_LINES}
                         ${COLOR} RED
                         printf '\"./%s\"' "${CMD_NAME}"
                         ${COLOR} GREEN
@@ -102,7 +105,7 @@ if [[ ${START_LINE} -gt 1 ]]; then
     printf '%d to %d\n' ${START_LINE_MIN} ${START_LINE}
 fi
 ${COLOR} GREEN
-printf 'Total Input lines: '
+printf ' Total Input lines: '
 ${COLOR} YELLOW
 printf '%d\n' ${N_LINES}
 
