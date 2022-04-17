@@ -66,9 +66,9 @@ do
                         printf '\"%s\"\n' "${FULL_DIR_NAME}"
                         ${COLOR} CYAN
                         printf ' %4d: Run ' ${N_LINES}
-                        ${COLOR} RED
+                        ${COLOR} YELLOW
                         printf '\"./%s\"' "${CMD_NAME}"
-                        ${COLOR} GREEN
+                        ${COLOR} RED
                         printf ' failed!\n'
                         ${COLOR} reset
         		let N_ERROR+=1
