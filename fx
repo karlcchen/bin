@@ -14,13 +14,22 @@
 #            change --fhead     to --fopt0/-f0
 #            change --ftail/-ft to --fopt2/-f2
 #
-s_VERSION="1.6"
+# for debug, following output debug to file fx_debug_output.txt
+#exec 5> fx_debug_output.txt
+#BASH_XTRACEFD="5"
+#PS4='$LINENO: '
+#set -x
+#
+
+s_VERSION="1.7"
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
 
-EGREP_EXE="egrep"
-FGREP_EXE="fgrep"
+#EGREP_EXE="egrep"
+#FGREP_EXE="fgrep"
+EGREP_EXE="grep -E"
+FGREP_EXE="grep -F"
 # Note: fgrep doesn't not take "-E" for pattern "XXX|YYY"
 GREP_EXE="grep"
 # -E use Extended regular expression
@@ -301,8 +310,8 @@ do
         printf "\nDEBUG1: input option #%d = \"%s\"\n" ${OPT_CNT} "$1"
     fi
 # use "echo" failed if "$1" equals echo's options such as: "-n", etc...
-#    echo "$1" | grep '^\-\-' >/dev/null
-    printf '%s\n' "$1" | grep '^\-' >/dev/null
+#    echo "$1" | grep '^--' >/dev/null
+    printf '%s\n' "$1" | grep '^-' >/dev/null
     if [[ $? -eq 0 ]] ; then
         # removed trailing spaces of OPT_STR_2
         OPT_STR_1=`printf '%s\n' "$1" | sed 's/=/ /1' | awk '{print $1}' | sed -e 's/[[:space:]]*$//'`
