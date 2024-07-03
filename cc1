@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#if [[ -z "${CFLAGS}" ]]; then
+#    CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread" 
+#fi
+
+CFLAGS="${CFLAGS} -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread"
+
+if [[ -z "${CC}" ]]; then
+    CC="clang"
+fi
+
+if [[ -z "$1" ]]; then
+    printf '\nUsage: cc1 filename_without.c'
+    echo
+    printf '\n\t Example: cc1 hello.c\n\n' 
+    exit 1
+fi
+
+LOOP=0
+while [[ ! -z "$1" ]]; 
+do  
+    LOOP=$((LOOP+1))
+    INPUT="$1"
+    if [[ -f "${INPUT}.c" ]]; then 
+        FILE="${INPUT}"
+    else 
+        printf 'file \"%s.c\" not found!\n' "${INPUT}"
+        exit 2 
+    fi
+    if [[ -e "${FILE}" ]]; then 
+        rm ${FILE} 
+        printf 'INFO: old executable \"%s\" removed!\n' "${FILE}"
+    fi 
+
+    echo =====================================================================================
+    printf '%s %s %s.c -o %s\n' "${CC}" "${CFLAGS}" "${FILE}" "${FILE}"
+    echo =====================================================================================
+    ${CC} ${CFLAGS} ${FILE}.c -o ${FILE}
+
+    if [[ -f "${INPUT}" ]]; then 
+        echo =====================================================================================
+        ls -l ${FILE}
+    else
+        printf '\nERROR: build failed, cannot find %s\n' "${FILE}"
+        exit 9
+    fi
+    shift 1
+done

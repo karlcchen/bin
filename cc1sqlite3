@@ -1,0 +1,4 @@
+#!/bin/bash
+
+CFLAGS="-DSQLITE_THREADSAFE=0 -ldl -lsqlite3 " cc1 $*
+
