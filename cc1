@@ -9,6 +9,9 @@ CFLAGS="${CFLAGS} -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshado
 if [[ -z "${CC}" ]]; then
     CC="clang"
 fi
+if [[ -z "${CPP}" ]]; then
+    CPP="clang++"
+fi
 
 if [[ -z "$1" ]]; then
     printf '\nUsage: cc1 filename_without.c'
@@ -22,27 +25,37 @@ while [[ ! -z "$1" ]];
 do  
     LOOP=$((LOOP+1))
     INPUT="$1"
-    if [[ -f "${INPUT}.c" ]]; then 
-        FILE="${INPUT}"
-    else 
-        printf 'file \"%s.c\" not found!\n' "${INPUT}"
+    if [[ -f "${INPUT}" ]]; then 
+        PRIMARY_NAME="${INPUT%%.*}"
+        EXTENSION_NAME="${INPUT##*.}"
+        OBJ_FILE="${PRIMARY_NAME}"
+        SRC_FILE="${INPUT}"
+        if [[ "${EXTENSION_NAME}" == "c" ]]; then
+            COMPILER="${CC}"
+        elif [[ "${EXTENSION_NAME}" == "cpp" ]]; then
+            COMPILER="${CPP}"
+        else
+            printf 'Source File \"%s\" Type unknown, Extension found: %s\n' "${INPUT}" "${EXTENSION_NAME}"
+        fi
+    else
+        printf 'Source File: \"%s\" not found!\n' "${INPUT}"
         exit 2 
     fi
-    if [[ -e "${FILE}" ]]; then 
-        rm ${FILE} 
-        printf 'INFO: old executable \"%s\" removed!\n' "${FILE}"
+    if [[ -e "${OBJ_FILE}" ]]; then 
+        printf 'INFO: remove old executable \"%s\"\n' "${OBJ_FILE}"
+        rm ${OBJ_FILE} 
     fi 
 
     echo =====================================================================================
-    printf '%s %s %s.c -o %s\n' "${CC}" "${CFLAGS}" "${FILE}" "${FILE}"
+    printf '%s %s %s -o %s\n' "${COMPILER}" "${CFLAGS}" "${SRC_FILE}" "${OBJ_FILE}"
     echo =====================================================================================
-    ${CC} ${CFLAGS} ${FILE}.c -o ${FILE}
+    ${COMPILER} ${CFLAGS} ${SRC_FILE} -o ${OBJ_FILE}
 
-    if [[ -f "${INPUT}" ]]; then 
+    if [[ -f "${OBJ_FILE}" ]]; then 
         echo =====================================================================================
-        ls -l ${FILE}
+        ls -l ${OBJ_FILE}
     else
-        printf '\nERROR: build failed, cannot find %s\n' "${FILE}"
+        printf '\nERROR: build failed, cannot find obj: %s\n' "${OBJ_FILE}"
         exit 9
     fi
     shift 1
