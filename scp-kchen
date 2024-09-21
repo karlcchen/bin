@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+USER_NAME="kchen"
+CMD_BASENAME=`basename $0`
+if [[ -z "${SCP_SRC_IP}" && -z "${SCP_DEST_IP}" ]] ; then 
+	printf '\n Must either of two:\n'
+	printf '\t export SCP_SRC_IP=192.168.1.xx\n' 
+	printf '\t export SCP_DEST_IP=192.168.1.yy\n' 
+	printf ' Usage:\n\t %s  SRC_PATH  DEST_PATH\n\n' "${CMD_BASENAME}"
+	exit 9
+fi
+if [[ -n "$1" ]] ; then 
+	SCP_SRC_FILES="$1"
+fi 
+if [[ -n "$2" ]] ; then 
+	SCP_DEST_FILES="$2"
+fi 
+
+if [[ -z "${SCP_SRC_FILES}" || -z "${SCP_DEST_FILES}" ]]; then
+	printf ' Usage:\n\t %s  SCP_SRC_FILES  SCP_DEST_FILES\n\n' "${CMD_BASENAME}" 
+	if [[ -z "${SCP_SRC_FILES}" ]] ; then
+		printf '\nERROR: %s: first arugument SCP_SRC_FILES not found!\n' "${CMD_BASENAME}"
+	fi 
+	if [[ -z "${SCP_DEST_FILES}" ]] ; then
+		printf '\nERROR: %s: second arugument SCP_DEST_FILES not found!\n' "${CMD_BASENAME}"
+	fi 
+	exit 9 
+fi
+if [[ -n "${SCP_SRC_IP}" ]]; then
+	PING_MSG=`ping -c 1 ${SCP_SRC_IP}`
+	if [[ $? -ne 0 ]] ; then 
+		printf '%s\n' "${PING_MSG}"
+		printf '\nERROR: SCP_SRC_IP %s is not alive!\n' "${SCP_SRC_IP}"
+		exit 9
+	fi  
+fi
+if [[ -n "${SCP_DEST_IP}" ]]; then
+	PING_MSG=`ping -c 1 ${SCP_DEST_IP}` 
+	if [[ $? -ne 0 ]] ; then 
+		printf '%s\n' "${PING_MSG}"
+		printf '\nERROR: SCP_DEST_IP %s is not alive!\n' "${SRC_DEST_IP}"
+		exit 9
+	fi  
+fi
+if [[ -n "${SCP_SRC_IP}" && -n "${SCP_DEST_IP}" ]] ; then 
+	scp ${USER_NAME}@${SCP_SRC_IP}:$1 ${SCP_DEST_IP}:$2
+else
+	if [[ -n "${SCP_SRC_IP}" ]] ; then 
+		scp ${USER_NAME}@${SCP_SRC_IP}:$1 $2
+	else 
+		scp $1 ${USER_NAME}@${SCP_DEST_IP}:$2
+	fi 
+fi 
+if [[ $? -ne 0 ]] ; then 
+	printf '\nERROR: %s failed!\n' "${CMD_BASENAME}"
+	exit 9
+fi 
