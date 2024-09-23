@@ -1,21 +1,48 @@
 #!/bin/bash
 #
-USER_NAME="kchen"
+VERSION_STR=1.0.0
+USER_NAME=`whoami`
 CMD_BASENAME=`basename $0`
-if [[ -z "${SCP_SRC_IP}" && -z "${SCP_DEST_IP}" ]] ; then 
-	printf '\n Must either of two:\n'
+
+HELP_scp_kchen() {
+	printf '\n Must have one of following two env variables defined:\n'
 	printf '\t export SCP_SRC_IP=192.168.1.xx\n' 
 	printf '\t export SCP_DEST_IP=192.168.1.yy\n' 
+	printf '\n Optionally have one of following two env variables defined:\n'
+	printf '\t export SCP_SRC_FILES=src_file(s)_spec\n' 
+	printf '\t export SCP_DEST_FILES=dest_files or dest_path\n' 
 	printf ' Usage:\n\t %s  SRC_PATH  DEST_PATH\n\n' "${CMD_BASENAME}"
-	exit 9
-fi
+	return 0
+}
+
+Version_scp_kchen() {
+	printf '%s: scp helper cmd, version %s\n' "$0" "${VERSION_STR}"
+	return 0 
+}
+
+if [[ "$1" = "--version" ]]; then 
+	Version_scp_kchen
+	exit 0 
+fi 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then 
+	HELP_scp_kchen
+	exit 0 
+fi 
+
 if [[ -n "$1" ]] ; then 
+# can over write env var "SCP_SRC_FILES"
 	SCP_SRC_FILES="$1"
 fi 
 if [[ -n "$2" ]] ; then 
+# can over write env var "SCP_DEST_FILES"
 	SCP_DEST_FILES="$2"
 fi 
 
+if [[ -z "$1" ]] ; then 
+	HELP_scp_kchen
+	exit 9
+fi
+# it is possible this script be called with arguments: $1=${SCP_SRC_FILES} and $2=${SCP_DEST_FILES}
 if [[ -z "${SCP_SRC_FILES}" || -z "${SCP_DEST_FILES}" ]]; then
 	printf ' Usage:\n\t %s  SCP_SRC_FILES  SCP_DEST_FILES\n\n' "${CMD_BASENAME}" 
 	if [[ -z "${SCP_SRC_FILES}" ]] ; then
@@ -43,15 +70,19 @@ if [[ -n "${SCP_DEST_IP}" ]]; then
 	fi  
 fi
 if [[ -n "${SCP_SRC_IP}" && -n "${SCP_DEST_IP}" ]] ; then 
-	scp ${USER_NAME}@${SCP_SRC_IP}:$1 ${SCP_DEST_IP}:$2
+	scp ${USER_NAME}@${SCP_SRC_IP}:${SCP_SRC_FILES} ${USER_NAME}@${SCP_DEST_IP}:${SCP_DEST_FILES}
 else
 	if [[ -n "${SCP_SRC_IP}" ]] ; then 
-		scp ${USER_NAME}@${SCP_SRC_IP}:$1 $2
+		scp ${USER_NAME}@${SCP_SRC_IP}:${SCP_SRC_FILES} ${SCP_DEST_FILES}
 	else 
-		scp $1 ${USER_NAME}@${SCP_DEST_IP}:$2
+		scp ${SCP_SRC_FILES} ${USER_NAME}@${SCP_DEST_IP}:${SCP_DEST_FILES}
 	fi 
 fi 
 if [[ $? -ne 0 ]] ; then 
 	printf '\nERROR: %s failed!\n' "${CMD_BASENAME}"
 	exit 9
 fi 
+if [[ -z "${SCP_DEST_IP}" ]]; then
+	echo === Latest file in: ${SCP_DEST_FILES}
+	ls -ltr ${SCP_DEST_FILES} | tail -n1
+fi
