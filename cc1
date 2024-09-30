@@ -4,13 +4,15 @@
 #    CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread" 
 #fi
 
-CFLAGS="${CFLAGS} -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread"
+# use either "-fopenmp" or "-lgopm" works with gcc, but does not work with clang
+# 
+CFLAGS="${CFLAGS} -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread -lgomp -lrt"
 
 if [[ -z "${CC}" ]]; then
-    CC="clang"
+    CC="gcc"
 fi
 if [[ -z "${CPP}" ]]; then
-    CPP="clang++"
+    CPP="g++"
 fi
 
 if [[ -z "$1" ]]; then
@@ -47,9 +49,9 @@ do
     fi 
 
     echo =====================================================================================
-    printf '%s %s %s -o %s\n' "${COMPILER}" "${CFLAGS}" "${SRC_FILE}" "${OBJ_FILE}"
+    printf '%s %s -o %s %s\n' "${COMPILER}" "${SRC_FILE}" "${OBJ_FILE}" "${CFLAGS}" 
     echo =====================================================================================
-    ${COMPILER} ${CFLAGS} ${SRC_FILE} -o ${OBJ_FILE}
+    ${COMPILER} ${SRC_FILE} -o ${OBJ_FILE} ${CFLAGS} 
 
     if [[ -f "${OBJ_FILE}" ]]; then 
         echo =====================================================================================
