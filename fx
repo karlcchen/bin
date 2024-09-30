@@ -21,7 +21,7 @@
 #set -x
 #
 
-s_VERSION="1.7"
+s_VERSION="1.7.1"
 EXE_NAME="`realpath $0`"
 EXE_BASE="`basename ${EXE_NAME}`"
 EXE_DIR="`dirname ${EXE_NAME}`"
@@ -142,9 +142,9 @@ function this_usage() {
     ${EXE_DIR}/asc green
 # --fopt2, -f2
     ${EXE_DIR}/asc yellow
-    printf ' --fopt2|-f2=%s' '-prune'
+    printf ' --fopt2|-f2=[%s]' '-prune'
     ${EXE_DIR}/asc green
-    printf ' set \"%s\" (tail/last) option, default --fopt2=' "${FIND_EXE}" "-prune"
+    printf ' set \"%s\" (tail/last) option to %s, deafult -f2=' "${FIND_EXE}" '-prune'
     ${EXE_DIR}/asc yellow
     printf '\"%s\"\n' "${FIND_TAIL_OPT}"
     ${EXE_DIR}/asc green
@@ -175,7 +175,7 @@ function this_usage() {
     ${EXE_DIR}/asc green
     printf ', Note: use '
     ${EXE_DIR}/asc yellow
-    printf '\"%s\\"' ","
+    printf '\"%s\"' ","
     ${EXE_DIR}/asc green
     printf ' to separate multiple options\n' "${FIND_TYPE_LIST}"
 # --path, -p
@@ -584,6 +584,11 @@ do
             if [[ ${b_DEBUG} -ne 0 ]] ; then
                 printf "\nINFO-24: -all option, change search list to: \'%s\'\n" "${FIND_PATTERN}"
             fi
+        elif [[ "${OPT_STR_1}" == "--version" ]] ; then
+# --version
+            printf '%s\t version=%s\n' "$0" "${s_VERSION}"
+            exit 0 
+            break
 #==============================================================================
         elif [[ "${OPT_STR_1}" == "--optend" ]] ; then
 #
