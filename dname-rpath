@@ -11,4 +11,3 @@ else
     find . -depth -type d -name "$1"
 #	find . -name "$1" 
 fi
-
