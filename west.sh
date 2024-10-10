@@ -2,7 +2,7 @@
 #
 
 THIS_BASENAME="`basename $0`"
-VERSION="1.7.1"
+VERSION="1.7.2"
 
 SAVED_WEST_PROJECT_FILE="saved_west_projects.txt"
 BOARD_DIR="./boards"
@@ -234,7 +234,7 @@ if [[ "${BUILD_MAKER}" == "west" ]] ; then
     ${BUILD_MAKER} build -p always -b ${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}
     PIPE_STA="`echo "${PIPESTATUS[@]}"`"
 elif [[ "${BUILD_MAKER}" == "cmake" ]] ; then 
-    ${BUILD_MAKER} -B${BUILD_DIR} -DBOARD=${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}
+    ${BUILD_MAKER} -S . -B${BUILD_DIR} -DBOARD=${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}
     PIPE_STA="`echo "${PIPESTATUS[@]}"`"
     if [[ "${PIPE_STA}" != "0 0" ]] ; then
         printf '\nERROR: %s failed PIPED Status: %s\n' "${BUILD_MAKER}" "${PIPE_STA}"
