@@ -6,6 +6,8 @@
 
 # use either "-fopenmp" or "-lgopm" works with gcc, but does not work with clang
 # 
+CC1_VERSION="1.1.0"
+
 CFLAGS="${CFLAGS} -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -g -lm -lpthread -lgomp -lrt"
 
 if [[ -z "${CC}" ]]; then
@@ -16,9 +18,10 @@ if [[ -z "${CPP}" ]]; then
 fi
 
 if [[ -z "$1" ]]; then
-    printf '\nUsage: cc1 filename_without.c'
+    printf '\nSingle C/C++ source file build, Version %s\n' "${CC1_VERSION}"  
+    printf '\n Usage: %s filename.c' "$0"
     echo
-    printf '\n\t Example: cc1 hello.c\n\n' 
+    printf '\n\t Example: cc1 ./src/hello.c\n\n' 
     exit 1
 fi
 
@@ -28,8 +31,9 @@ do
     LOOP=$((LOOP+1))
     INPUT="$1"
     if [[ -f "${INPUT}" ]]; then 
-        PRIMARY_NAME="${INPUT%%.*}"
-        EXTENSION_NAME="${INPUT##*.}"
+        INPUT_BASENAME="`basename $1`"
+        PRIMARY_NAME="${INPUT_BASENAME%%.*}"
+        EXTENSION_NAME="${INPUT_BASENAME##*.}"
         OBJ_FILE="${PRIMARY_NAME}"
         SRC_FILE="${INPUT}"
         if [[ "${EXTENSION_NAME}" == "c" ]]; then

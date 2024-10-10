@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 
-VERSION="1.7.0"
+THIS_BASENAME="`basename $0`"
+VERSION="1.7.1"
+
 SAVED_WEST_PROJECT_FILE="saved_west_projects.txt"
 BOARD_DIR="./boards"
 PWD=`pwd`
@@ -23,20 +25,25 @@ b_DRY_RUN=0
 b_NEW_BUILD=0
 
 if [[ -z "$1" ]] ; then 
-    printf '\nUsage: %s [BOARD_Name] PRJ_PATH  [--new]\n\n' "$0" 
-    printf 'Example of BOARD: stm32h7s78_dk black_f407ve rpi_4b rpi_5\n'
-    printf 'Note: use \"-b\" or \"-l\" as Board Name and \"-p\" or \"-l\" as Project Path from (saved) file: \"%s\"\n\n' "${SAVED_WEST_PROJECT_FILE}"
+    printf '\n===== Shell Script for ZephyrRtos, helper for calling west/cmake, Version: %s =====\n' "${VERSION}"  
+    printf '\nUsage: %s [PATH]\[BOARD_Name] PRJ_PATH  [--new]\n\n' "${THIS_BASENAME}" 
+    printf 'Example of BOARD: %s %s %s\n' "stm32h7s78_dk" "black_f407ve" "rpi_4b rpi_5"
+    printf 'Notes:\n'
+    printf '\"-b\" or \"-l\" as (last) Board Name\n' 
+    printf '\"-p\" or \"-l\" as (last) Project_Path from (saved) file: \"%s\"\n\n' "${SAVED_WEST_PROJECT_FILE}"
+    printf '\n Current Default Build_Maker is: \"%s\"\n' "${BUILD_MAKER}" 
+    printf ' --west:  force Build_Maker to \"%s\"\n' "west"
+    printf ' --cmake: force Build_Maker to \"%s\"\n' "cmake"
     printf 'Examples:\n'
-    printf '\t west.sh f407ve sample/basic/blinky --new\n'
-    printf '\t west.sh stm32h7s78_dk samples/application_development/code_relocation_nocopy/\n'
-    printf '\t west.sh s78 -l\n'
-    printf '\t west.sh --west -l samples/subsys/portability/cmsis_rtos_v2/philosophers\n'
-    printf '\t west.sh --dry s78 samples/subsys/fs/fs_sample %s\n' "-DCONF_FILE=prj_ext.conf"
-    printf '\n%s Version: %s\n' "$0" "${VERSION}"  
+    printf '\t %s f407ve sample/basic/blinky --new\n' "${THIS_BASENAME}" 
+    printf '\t %s stm32h7s78_dk samples/application_development/code_relocation_nocopy/\n' "${THIS_BASENAME}" 
+    printf '\t %s s78 -l\n' "${THIS_BASENAME}" 
+    printf '\t %s --west -l samples/subsys/portability/cmsis_rtos_v2/philosophers\n' "${THIS_BASENAME}" 
+    printf '\t %s --dry s78 samples/subsys/fs/fs_sample %s\n' "${THIS_BASENAME}" "-DCONF_FILE=prj_ext.conf"
     exit 1
 fi 
 if [[ "$1" = "--version" ]] ; then 
-    printf '%s Version: %s\n' "$0" "${VERSION}"  
+    printf '%s Version: %s\n' "${THIS_BASENAME}" "${VERSION}"  
     exit 0 
 fi
 
