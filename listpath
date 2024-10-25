@@ -1,0 +1,14 @@
+#!/bin/bash
+
+IFS=':'
+
+read -ra PathArr <<< "$PATH"
+
+for str in "${PathArr[@]}";
+do
+	if [[ ! -d "$str" ]]; then
+		printf 'INVALID: %s\n' "$str"
+	else
+		printf '%s\n' "$str"
+	fi 
+done
