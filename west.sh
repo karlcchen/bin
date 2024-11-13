@@ -1,8 +1,12 @@
 #!/bin/bash
 #
-
+# 
+# Build System (CMake)
+# https://docs.zephyrproject.org/latest/build/cmake/index.html
+#
+#
 THIS_BASENAME="`basename $0`"
-VERSION="1.7.2"
+VERSION="1.7.4"
 
 SAVED_WEST_PROJECT_FILE="saved_west_projects.txt"
 BOARD_DIR="./boards"
@@ -26,14 +30,16 @@ b_NEW_BUILD=0
 
 if [[ -z "$1" ]] ; then 
     printf '\n===== Shell Script for ZephyrRtos, helper for calling west/cmake, Version: %s =====\n' "${VERSION}"  
-    printf '\nUsage: %s [PATH]\[BOARD_Name] PRJ_PATH  [--new]\n\n' "${THIS_BASENAME}" 
+    printf '\nUsage: %s [PATH]\[BOARD_Name] PRJ_PATH  [--new][--dry][--version]\n\n' "${THIS_BASENAME}" 
     printf 'Example of BOARD: %s %s %s\n' "stm32h7s78_dk" "black_f407ve" "rpi_4b rpi_5"
     printf 'Notes:\n'
-    printf '\"-b\" or \"-l\" as (last) Board Name\n' 
-    printf '\"-p\" or \"-l\" as (last) Project_Path from (saved) file: \"%s\"\n\n' "${SAVED_WEST_PROJECT_FILE}"
-    printf '\n Current Default Build_Maker is: \"%s\"\n' "${BUILD_MAKER}" 
+    printf ' -b/-l: use (lastest) Board   from (saved) file: \"%s\"\n' "${SAVED_WEST_PROJECT_FILE}"
+    printf ' -p/-l: use (lastest) Project from (saved) file: \"%s\"\n' "${SAVED_WEST_PROJECT_FILE}"
     printf ' --west:  force Build_Maker to \"%s\"\n' "west"
     printf ' --cmake: force Build_Maker to \"%s\"\n' "cmake"
+    printf ' Current Default Build_Maker is: \"%s\"\n' "${BUILD_MAKER}" 
+    printf ' --dry: dry run\n'
+    printf ' --version: display version\n'
     printf 'Examples:\n'
     printf '\t %s f407ve sample/basic/blinky --new\n' "${THIS_BASENAME}" 
     printf '\t %s stm32h7s78_dk samples/application_development/code_relocation_nocopy/\n' "${THIS_BASENAME}" 
@@ -195,7 +201,7 @@ if [[ -n "$1" && "$1" == "--new" ]] ; then
     shift 1
 fi
 if [[ b_NEW_BUILD -eq 1 ]] ; then
-    printf '\n### INFO: REMOVE BUILD DIR: %s\n' "./${BUILD_DIR}/"
+    printf '\n### INFO: Removing BUILD DIR: \"%s\"\n' "./${BUILD_DIR}/"
     rm -rf ./${BUILD_DIR}/
     if [[ $? -ne 0 ]] ; then 
         printf '\nERROR: rm -rf %s failed!\n' "./${BUILD_DIR}/"
@@ -212,14 +218,6 @@ if [[ -n "$1" && "$1" == "--dry" ]] ; then
     b_DRY_RUN=1
     shift 1
 fi
-if [[ b_DRY_RUN -eq 1 ]] ; then
-    echo 
-    echo "--dry run command:"
-    echo " west build -p always -b ${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}"
-    echo
-    exit 0 
-fi
-
 # save board name and project path to file
 if [[ "${LAST_BOARD}" != "${BOARD}" || "${LAST_PRJ_PATH}" != "${PRJ_PATH}" ]] ; then
     printf '%s\t%s\n' "${BOARD}" "${PRJ_PATH}" >> ${SAVED_WEST_PROJECT_FILE}
@@ -230,10 +228,36 @@ if [[ "${LAST_BOARD}" != "${BOARD}" || "${LAST_PRJ_PATH}" != "${PRJ_PATH}" ]] ; 
     printf '### INFO: "%s\t%s" saved to file: %s\n' "${BOARD}" "${PRJ_PATH}" "${SAVED_WEST_PROJECT_FILE}"
 fi
 
+if [[ -n "$@" ]] ; then 
+    printf '# INFO: Leftover Command Line Arguments: \"%s\"\n' "$@"
+fi
+
 if [[ "${BUILD_MAKER}" == "west" ]] ; then 
+    if [[ b_DRY_RUN -eq 1 ]] ; then
+        printf '\n#===== --dry run =====#\n'
+#        echo " west build -p always -b ${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}"
+        echo "${BUILD_MAKER} build -p always -b ${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}"
+        echo
+        exit 0
+    fi    
     ${BUILD_MAKER} build -p always -b ${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}
     PIPE_STA="`echo "${PIPESTATUS[@]}"`"
+#
+# Using Zephyr without west
+#
 elif [[ "${BUILD_MAKER}" == "cmake" ]] ; then 
+    if [[ b_DRY_RUN -eq 1 ]] ; then
+        printf '\n#===== --dry run =====#\n'
+        echo "${BUILD_MAKER} -S . -B${BUILD_DIR} -DBOARD=${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}"
+        echo "${BUILD_MAKER} --build ${BUILD_DIR} -j | tee -a ${TMP_LOG}"
+        echo
+        exit 0 
+    fi
+# 
+# Notes: 
+#   CMake Warning:  Ignoring extra path from command line: 
+#   but the extra path which is "${PRJ_PATH}" were actually needed!
+#
     ${BUILD_MAKER} -S . -B${BUILD_DIR} -DBOARD=${BOARD} ${PRJ_PATH} $@ | tee ${TMP_LOG}
     PIPE_STA="`echo "${PIPESTATUS[@]}"`"
     if [[ "${PIPE_STA}" != "0 0" ]] ; then
@@ -241,7 +265,9 @@ elif [[ "${BUILD_MAKER}" == "cmake" ]] ; then
         mv ${TMP_LOG} ${TMP_LOG}.ERR
         exit 6 
     fi 
-    make -C ${BUILD_DIR} -j | tee -a ${TMP_LOG}
+# new camke option: --parallel [<jobs>] or -j [<jobs>]
+    ${BUILD_MAKER} --build ${BUILD_DIR} -j | tee -a ${TMP_LOG}
+#    make -C ${BUILD_DIR} -j | tee -a ${TMP_LOG}
     PIPE_STA="`echo "${PIPESTATUS[@]}"`"
 fi
 if [[ "${PIPE_STA}" != "0 0" ]] ; then
